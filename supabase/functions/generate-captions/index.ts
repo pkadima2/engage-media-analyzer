@@ -35,28 +35,29 @@ The captions must:
 3. Include an optional, effective call-to-action to inspire engagement (e.g., "Comment below," "Tag a friend," "Share your thoughts," "Did you know?" "Fact," or "Insight").
 4. Reflect current trends current trends, use platform-specific language, and include emojis where appropriate to match audience expectations and boost relatability.
 
-Caption 1:
 
-[A creative, catchy title highlighting the post's theme.
+
+[A creative, catchy title highlighting the post's theme in bold.]
 as a paragraph ready to be shared. 
-Write a 1-2 sentence caption in a ${tone} tone, including hashtags.
+[Write a 1-2 sentence caption in a ${tone} tone, including hashtags.
 Provide a clear and actionable CTA encouraging user engagement.]
 
-Caption 2:
-[Another engaging and unique title for the post.]
+
+[Another engaging and unique title for the post in Bold]
 as a paragraph ready to be shared. 
 [Craft an attention-grabbing caption that resonates with the ${platform}'s audience, with relevant hashtags.
 Add a compelling CTA to inspire interaction (e.g., shares, likes, or comments).]
 
-Caption 3:
 
-[A third compelling and innovative title idea.]
+
+[A third compelling and innovative title idea in Bold.]
 as a paragraph ready to be shared. 
 [Provide a brief but impactful caption using hashtags and keeping the ${tone}.
 Suggest an actionable CTA to encourage user engagement and sharing.]
 
 
 Important Notes:
+- Make sure are separed Caption
 - Captions must be practical, innovative, and specifically tailored to the ${niche} industry.
 - Ensure all captions reflect the latest trends and best practices for content creation on ${platform}.; 
 
