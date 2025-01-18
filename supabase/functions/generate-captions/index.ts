@@ -36,19 +36,24 @@ The captions must:
           { role: 'system', content: 'You are a professional social media content creator.' },
           { role: 'user', content: prompt }
         ],
+        temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 
-    const data = await response.json();
-    
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Failed to generate captions');
+      throw new Error('Failed to generate captions');
     }
 
+    const data = await response.json();
     const generatedText = data.choices[0].message.content;
-    const captions = generatedText.split('\n\n')
-      .filter((caption: string) => caption.trim().length > 0)
-      .map((caption: string) => caption.replace(/^\d\.\s/, '').trim());
+    
+    // Split the response into three separate captions
+    const captions = generatedText
+      .split(/\n\n|\n(?=\d\.)/g)
+      .filter(caption => caption.trim())
+      .map(caption => caption.replace(/^\d\.\s*/, '').trim())
+      .slice(0, 3);
 
     return new Response(JSON.stringify({ captions }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

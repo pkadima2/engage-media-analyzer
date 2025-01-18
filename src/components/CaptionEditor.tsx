@@ -4,6 +4,7 @@ import { Textarea } from './ui/textarea';
 import { Card } from './ui/card';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
+import { Skeleton } from './ui/skeleton';
 
 interface CaptionEditorProps {
   captions: string[];
@@ -24,10 +25,20 @@ export const CaptionEditor = ({
     return (
       <Card className="p-6">
         <div className="space-y-4">
-          <div className="h-20 bg-muted rounded animate-pulse" />
-          <div className="h-20 bg-muted rounded animate-pulse" />
-          <div className="h-20 bg-muted rounded animate-pulse" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
+      </Card>
+    );
+  }
+
+  if (!captions.length) {
+    return (
+      <Card className="p-6">
+        <p className="text-center text-muted-foreground">
+          No captions generated yet. Please complete the previous steps.
+        </p>
       </Card>
     );
   }
@@ -51,7 +62,8 @@ export const CaptionEditor = ({
             <Textarea
               value={caption}
               onChange={(e) => onEdit(index, e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[100px] w-full"
+              placeholder="Edit this caption..."
             />
           </div>
         ))}

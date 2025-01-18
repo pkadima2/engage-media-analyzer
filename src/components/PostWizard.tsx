@@ -65,8 +65,17 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
 
       if (error) throw error;
 
+      if (!data.captions || !Array.isArray(data.captions)) {
+        throw new Error('Invalid response format from caption generation');
+      }
+
       setCaptions(data.captions);
       setSelectedCaption(data.captions[0]);
+      
+      toast({
+        title: "Captions Generated",
+        description: "Your captions have been generated successfully. Choose one or edit them as needed.",
+      });
     } catch (error) {
       console.error('Caption generation error:', error);
       toast({
