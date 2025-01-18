@@ -57,6 +57,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
     }
 
     setIsGeneratingCaptions(true);
+    setCaptions([]); // Clear existing captions
 
     try {
       console.log('Generating captions with:', { platform, niche, goal, tone, imageMetadata });
@@ -67,9 +68,11 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
 
       console.log('Response from generate-captions:', data, error);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message);
+      }
 
-      if (!data.captions || !Array.isArray(data.captions)) {
+      if (!data?.captions || !Array.isArray(data.captions)) {
         throw new Error('Invalid response format from caption generation');
       }
 
@@ -84,7 +87,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
       console.error('Caption generation error:', error);
       toast({
         title: "Caption Generation Failed",
-        description: "There was an error generating captions. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error generating captions. Please try again.",
         variant: "destructive",
       });
     } finally {

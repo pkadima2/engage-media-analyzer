@@ -9,13 +9,22 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
     const { platform, niche, goal, tone, imageMetadata } = await req.json();
     console.log('Received request with:', { platform, niche, goal, tone, imageMetadata });
+
+    if (!platform || !niche || !goal || !tone) {
+      throw new Error('Missing required fields');
+    }
 
     const prompt = `You are the world's leading content creator and digital marketing expert with 20 years of hands-on experience. Generate 3 detailed and creative social media post captions for the ${niche} industry, designed to achieve the goal of ${goal} in a ${tone} tone, taking into consideration the following image context: ${JSON.stringify(imageMetadata)}.
 
