@@ -28,18 +28,18 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
           document.body.appendChild(script);
           
           window.fbAsyncInit = () => {
-            FB.init({
+            window.FB?.init({
               appId: FB_APP_ID,
               version: 'v18.0',
               xfbml: true
             });
-            resolve(FB);
+            resolve(window.FB!);
           };
         });
       }
 
       // Share to Facebook
-      FB.ui({
+      window.FB?.ui({
         method: 'share',
         href: imageUrl,
         quote: brandedCaption,
