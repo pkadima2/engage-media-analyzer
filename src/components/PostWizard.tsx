@@ -10,6 +10,7 @@ import { MediaPreview } from './upload/MediaPreview';
 import { UploadProgress } from './upload/UploadProgress';
 import { processMediaFile } from '@/utils/mediaUtils';
 import { CaptionEditor } from './CaptionEditor';
+import { CaptionPreview } from './preview/CaptionPreview';
 
 type Platform = 'Instagram' | 'LinkedIn' | 'Facebook' | 'Twitter' | 'TikTok';
 type Goal = 'Sales' | 'Drive Engagement' | 'Grow Followers' | 'Share Knowledge' | 'Brand Awareness';
@@ -376,61 +377,71 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
   };
 
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5, 6].map((number) => (
-            <div
-              key={number}
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step === number
-                  ? 'bg-primary text-white'
-                  : step > number
-                  ? 'bg-primary/20 text-primary'
-                  : 'bg-gray-100 text-gray-400'
-              }`}
-            >
-              {number}
-            </div>
-          ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5, 6].map((number) => (
+              <div
+                key={number}
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step === number
+                    ? 'bg-primary text-white'
+                    : step > number
+                    ? 'bg-primary/20 text-primary'
+                    : 'bg-gray-100 text-gray-400'
+                }`}
+              >
+                {number}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {renderStep()}
+        {renderStep()}
 
-      <div className="flex justify-between mt-8">
-        <Button
-          variant="ghost"
-          onClick={handleBack}
-          disabled={step === 1}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
-        
-        {step < 6 ? (
+        <div className="flex justify-between mt-8">
           <Button
-            onClick={handleNext}
-            disabled={
-              (step === 1 && !preview) ||
-              (step === 2 && !platform) ||
-              (step === 3 && !niche) ||
-              (step === 4 && !goal) ||
-              (step === 5 && !tone)
-            }
+            variant="ghost"
+            onClick={handleBack}
+            disabled={step === 1}
+            className="flex items-center gap-2"
           >
-            Next
+            <ArrowLeft className="w-4 h-4" />
+            Back
           </Button>
-        ) : (
-          <Button
-            onClick={handleComplete}
-            disabled={!selectedCaption}
-          >
-            Complete
-          </Button>
-        )}
+          
+          {step < 6 ? (
+            <Button
+              onClick={handleNext}
+              disabled={
+                (step === 1 && !preview) ||
+                (step === 2 && !platform) ||
+                (step === 3 && !niche) ||
+                (step === 4 && !goal) ||
+                (step === 5 && !tone)
+              }
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              onClick={handleComplete}
+              disabled={!selectedCaption}
+            >
+              Complete
+            </Button>
+          )}
+        </div>
+      </Card>
+
+      {/* Preview Panel */}
+      <div className="sticky top-6">
+        <CaptionPreview 
+          imageUrl={preview} 
+          caption={selectedCaption || ''} 
+        />
       </div>
-    </Card>
+    </div>
   );
 };
