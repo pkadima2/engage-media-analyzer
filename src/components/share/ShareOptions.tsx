@@ -13,8 +13,65 @@ interface ShareOptionsProps {
 
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
+  const FB_APP_ID = '1602291440389010';
+
+  const handleFacebookShare = async () => {
+    try {
+      // Initialize Facebook SDK
+      if (!window.FB) {
+        window.FB = await new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://connect.facebook.net/en_US/sdk.js';
+          script.async = true;
+          script.defer = true;
+          script.crossOrigin = 'anonymous';
+          document.body.appendChild(script);
+          
+          window.fbAsyncInit = () => {
+            FB.init({
+              appId: FB_APP_ID,
+              version: 'v18.0',
+              xfbml: true
+            });
+            resolve(FB);
+          };
+        });
+      }
+
+      // Share to Facebook
+      FB.ui({
+        method: 'share',
+        href: imageUrl,
+        quote: brandedCaption,
+      }, function(response) {
+        if (response && !response.error_message) {
+          toast({
+            title: "Shared successfully",
+            description: "Your post has been shared to Facebook",
+          });
+        } else {
+          toast({
+            title: "Share failed",
+            description: "There was an error sharing to Facebook",
+            variant: "destructive",
+          });
+        }
+      });
+    } catch (error) {
+      toast({
+        title: "Share failed",
+        description: "There was an error initializing Facebook sharing",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleShare = async (targetPlatform: Platform) => {
+    if (targetPlatform === 'Facebook') {
+      await handleFacebookShare();
+      return;
+    }
+
     try {
       const shareData = {
         title: 'Share your post',
