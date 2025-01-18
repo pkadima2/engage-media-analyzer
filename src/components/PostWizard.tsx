@@ -4,11 +4,12 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from './ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { MediaDropzone } from './upload/MediaDropzone';
 import { MediaPreview } from './upload/MediaPreview';
 import { UploadProgress } from './upload/UploadProgress';
 import { processMediaFile } from '@/utils/mediaUtils';
+import { CaptionEditor } from './CaptionEditor';
 
 type Platform = 'Instagram' | 'LinkedIn' | 'Facebook' | 'Twitter' | 'TikTok';
 type Goal = 'Sales' | 'Drive Engagement' | 'Grow Followers' | 'Share Knowledge' | 'Brand Awareness';
@@ -35,15 +36,57 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
   const [postId, setPostId] = useState<string | null>(null);
   const imageRef = React.useRef<HTMLImageElement>(null);
 
+  // Caption generation state
+  const [captions, setCaptions] = useState<string[]>([]);
+  const [selectedCaption, setSelectedCaption] = useState<string>();
+  const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false);
+  const [imageMetadata, setImageMetadata] = useState<any>(null);
+
   const handleBack = () => {
     setStep(prev => Math.max(1, prev - 1));
+  };
+
+  const generateCaptions = async () => {
+    if (!platform || !niche || !goal || !tone || !imageMetadata) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all fields before generating captions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingCaptions(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-captions', {
+        body: { platform, niche, goal, tone, imageMetadata },
+      });
+
+      if (error) throw error;
+
+      setCaptions(data.captions);
+      setSelectedCaption(data.captions[0]);
+    } catch (error) {
+      console.error('Caption generation error:', error);
+      toast({
+        title: "Caption Generation Failed",
+        description: "There was an error generating captions. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingCaptions(false);
+    }
   };
 
   const handleNext = async () => {
     if (step === 1 && file && !postId) {
       await uploadMedia();
+    } else if (step === 4) {
+      await generateCaptions();
+      setStep(prev => prev + 1);
     } else {
-      setStep(prev => Math.min(5, prev + 1));
+      setStep(prev => Math.min(6, prev + 1));
     }
   };
 
@@ -64,7 +107,6 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' }
       });
-      // Handle camera stream
       toast({
         title: "Camera accessed",
         description: "You can now capture media.",
@@ -98,6 +140,8 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
         imageRef.current
       );
 
+      setImageMetadata(metadata);
+
       const fileExt = metadata.originalName.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
@@ -119,7 +163,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
         .from('posts')
         .insert({
           image_url: publicUrl,
-          platform: 'default',
+          platform: platform || 'default',
           user_id: user.id
         })
         .select()
@@ -146,7 +190,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
   };
 
   const handleComplete = async () => {
-    if (!postId) return;
+    if (!postId || !selectedCaption) return;
     
     try {
       const { error } = await supabase
@@ -155,21 +199,22 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
           platform,
           niche,
           goal,
-          tone
+          tone,
+          selected_caption: selectedCaption
         })
         .eq('id', postId);
 
       if (error) throw error;
 
       toast({
-        title: "Settings saved",
-        description: "Your post settings have been saved successfully.",
+        title: "Post Created",
+        description: "Your post has been created successfully.",
       });
       
       onComplete();
     } catch (error) {
       toast({
-        title: "Error saving settings",
+        title: "Error saving post",
         description: error instanceof Error ? error.message : "Failed to save post settings",
         variant: "destructive",
       });
@@ -290,6 +335,27 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
             </div>
           </div>
         );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">6</div>
+              <h2 className="text-xl font-semibold">Generated Captions</h2>
+            </div>
+            <CaptionEditor
+              captions={captions}
+              onSelect={setSelectedCaption}
+              onEdit={(index, newCaption) => {
+                const newCaptions = [...captions];
+                newCaptions[index] = newCaption;
+                setCaptions(newCaptions);
+              }}
+              selectedCaption={selectedCaption}
+              isLoading={isGeneratingCaptions}
+            />
+          </div>
+        );
     }
   };
 
@@ -297,7 +363,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
     <Card className="p-6">
       <div className="flex justify-between items-center mb-8">
         <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((number) => (
+          {[1, 2, 3, 4, 5, 6].map((number) => (
             <div
               key={number}
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -327,14 +393,15 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
           Back
         </Button>
         
-        {step < 5 ? (
+        {step < 6 ? (
           <Button
             onClick={handleNext}
             disabled={
               (step === 1 && !preview) ||
               (step === 2 && !platform) ||
               (step === 3 && !niche) ||
-              (step === 4 && !goal)
+              (step === 4 && !goal) ||
+              (step === 5 && !tone)
             }
           >
             Next
@@ -342,7 +409,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
         ) : (
           <Button
             onClick={handleComplete}
-            disabled={!tone}
+            disabled={!selectedCaption}
           >
             Complete
           </Button>
