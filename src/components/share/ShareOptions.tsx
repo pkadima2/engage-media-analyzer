@@ -11,24 +11,6 @@ interface ShareOptionsProps {
   platform: Platform;
 }
 
-declare global {
-  interface Window {
-    FB?: {
-      init: (params: {
-        appId: string;
-        version: string;
-        xfbml: boolean;
-      }) => void;
-      ui: (params: {
-        method: string;
-        href?: string;
-        quote?: string;
-      }, callback?: (response: any) => void) => void;
-    };
-    fbAsyncInit?: () => void;
-  }
-}
-
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
   const FB_APP_ID = '1602291440389010';
