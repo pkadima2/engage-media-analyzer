@@ -43,13 +43,13 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
       <Accordion type="single" collapsible className="w-full space-y-2">
         <AccordionItem value="environment">
           <AccordionTrigger className="text-base hover:no-underline">
-            Environment & Scene
+            Environment & Setting
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
             <div>
-              <h4 className="font-medium mb-2">Labels</h4>
+              <h4 className="font-medium mb-2">Setting Type</h4>
               <ul className="space-y-1">
-                {result.environment.labels.map((label: any, index: number) => (
+                {result.environment.setting.labels.map((label: any, index: number) => (
                   <li key={index} className="flex justify-between">
                     <span>{label.description}</span>
                     <span className="text-muted-foreground">{label.confidence}</span>
@@ -58,9 +58,32 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Dominant Colors</h4>
+              <h4 className="font-medium mb-2">Notable Elements</h4>
+              <ul className="space-y-1">
+                {result.environment.setting.elements.map((element: any, index: number) => (
+                  <li key={index} className="flex justify-between">
+                    <span>{element.description}</span>
+                    <span className="text-muted-foreground">{element.confidence}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="ambiance">
+          <AccordionTrigger className="text-base hover:no-underline">
+            Ambiance & Atmosphere
+          </AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Lighting</h4>
+              <p className="capitalize">{result.environment.ambiance.lighting}</p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Color Scheme</h4>
               <div className="space-y-2">
-                {result.environment.colors.map((color: any, index: number) => (
+                {result.environment.ambiance.colors.map((color: any, index: number) => (
                   <div key={index} className="flex justify-between items-center">
                     {renderColorBox(color.rgb)}
                     <span className="text-muted-foreground">{color.score}</span>
@@ -73,7 +96,7 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
 
         <AccordionItem value="context">
           <AccordionTrigger className="text-base hover:no-underline">
-            Context & Objects
+            Context & Notable Elements
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
             <div>
@@ -100,18 +123,28 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
                 </ul>
               </div>
             )}
+            {result.context.text && (
+              <div>
+                <h4 className="font-medium mb-2">Detected Text</h4>
+                <p className="text-sm">{result.context.text}</p>
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="mood">
+        <AccordionItem value="human">
           <AccordionTrigger className="text-base hover:no-underline">
-            Mood & Emotions
+            Human Interaction
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
-            {result.mood.faces.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-2">People Present</h4>
+              <p>{result.humanInteraction.peoplePresent ? "Yes" : "No"}</p>
+            </div>
+            {result.humanInteraction.faces.length > 0 && (
               <div>
                 <h4 className="font-medium mb-2">Facial Expressions</h4>
-                {result.mood.faces.map((face: any, index: number) => (
+                {result.humanInteraction.faces.map((face: any, index: number) => (
                   <div key={index} className="space-y-1">
                     <p>Face {index + 1}:</p>
                     <ul className="ml-4">
@@ -125,10 +158,22 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
                 ))}
               </div>
             )}
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="theme">
+          <AccordionTrigger className="text-base hover:no-underline">
+            Overall Theme & Safety
+          </AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Detected Mood</h4>
+              <p className="capitalize">{result.overallTheme.mood}</p>
+            </div>
             <div>
               <h4 className="font-medium mb-2">Content Safety</h4>
               <ul className="space-y-1">
-                {Object.entries(result.mood.safety).map(([key, value]: [string, string]) => (
+                {Object.entries(result.overallTheme.safety).map(([key, value]: [string, string]) => (
                   <li key={key} className="flex justify-between">
                     <span className="capitalize">{key.replace('_', ' ')}</span>
                     <span className="text-muted-foreground">{value}</span>

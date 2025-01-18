@@ -23,12 +23,13 @@ const Index = () => {
             content: base64Image.split(',')[1]
           },
           features: [
-            { type: 'LABEL_DETECTION', maxResults: 10 },
+            { type: 'LABEL_DETECTION', maxResults: 15 },
             { type: 'IMAGE_PROPERTIES' },
             { type: 'FACE_DETECTION' },
             { type: 'OBJECT_LOCALIZATION' },
             { type: 'LANDMARK_DETECTION' },
-            { type: 'SAFE_SEARCH_DETECTION' }
+            { type: 'SAFE_SEARCH_DETECTION' },
+            { type: 'TEXT_DETECTION' }
           ]
         }]
       })
@@ -40,18 +41,36 @@ const Index = () => {
       throw new Error(data.error.message || 'Failed to analyze image');
     }
 
-    // Process and structure the response
     const result = data.responses[0];
+    
+    // Process and structure the response according to the new requirements
     return {
       environment: {
-        labels: result.labelAnnotations?.map((label: any) => ({
-          description: label.description,
-          confidence: (label.score * 100).toFixed(1) + '%'
-        })) || [],
-        colors: result.imagePropertiesAnnotation?.dominantColors?.colors?.map((color: any) => ({
-          rgb: `rgb(${Math.round(color.color.red)}, ${Math.round(color.color.green)}, ${Math.round(color.color.blue)})`,
-          score: (color.score * 100).toFixed(1) + '%'
-        })) || []
+        setting: {
+          labels: result.labelAnnotations
+            ?.filter((label: any) => 
+              ['indoor', 'outdoor', 'urban', 'rural', 'natural']
+              .some(term => label.description.toLowerCase().includes(term)))
+            .map((label: any) => ({
+              description: label.description,
+              confidence: (label.score * 100).toFixed(1) + '%'
+            })) || [],
+          elements: result.labelAnnotations
+            ?.filter((label: any) => 
+              ['building', 'tree', 'furniture', 'wall', 'floor']
+              .some(term => label.description.toLowerCase().includes(term)))
+            .map((label: any) => ({
+              description: label.description,
+              confidence: (label.score * 100).toFixed(1) + '%'
+            })) || []
+        },
+        ambiance: {
+          colors: result.imagePropertiesAnnotation?.dominantColors?.colors?.map((color: any) => ({
+            rgb: `rgb(${Math.round(color.color.red)}, ${Math.round(color.color.green)}, ${Math.round(color.color.blue)})`,
+            score: (color.score * 100).toFixed(1) + '%'
+          })) || [],
+          lighting: determineLighting(result.imagePropertiesAnnotation?.dominantColors?.colors)
+        }
       },
       context: {
         objects: result.localizedObjectAnnotations?.map((obj: any) => ({
@@ -61,18 +80,67 @@ const Index = () => {
         landmarks: result.landmarkAnnotations?.map((landmark: any) => ({
           name: landmark.description,
           confidence: (landmark.score * 100).toFixed(1) + '%'
-        })) || []
+        })) || [],
+        text: result.textAnnotations?.[0]?.description || ''
       },
-      mood: {
+      humanInteraction: {
         faces: result.faceAnnotations?.map((face: any) => ({
           joy: face.joyLikelihood,
           sorrow: face.sorrowLikelihood,
           anger: face.angerLikelihood,
-          surprise: face.surpriseLikelihood
+          surprise: face.surpriseLikelihood,
+          headwear: face.headwearLikelihood
         })) || [],
+        peoplePresent: result.localizedObjectAnnotations
+          ?.some((obj: any) => obj.name.toLowerCase().includes('person')) || false
+      },
+      overallTheme: {
+        mood: determineMood(result),
         safety: result.safeSearchAnnotation || {}
       }
     };
+  };
+
+  const determineLighting = (colors: any[] = []) => {
+    if (!colors.length) return 'unknown';
+    
+    const avgBrightness = colors.reduce((acc, color) => {
+      const brightness = (
+        (color.color.red * 299) + 
+        (color.color.green * 587) + 
+        (color.color.blue * 114)
+      ) / 1000;
+      return acc + (brightness * color.score);
+    }, 0);
+
+    if (avgBrightness > 170) return 'bright';
+    if (avgBrightness > 85) return 'moderate';
+    return 'dim';
+  };
+
+  const determineMood = (result: any) => {
+    const labels = result.labelAnnotations || [];
+    const moodKeywords = {
+      calm: ['peaceful', 'serene', 'calm', 'quiet'],
+      energetic: ['active', 'dynamic', 'energetic', 'lively'],
+      formal: ['professional', 'formal', 'official'],
+      casual: ['casual', 'relaxed', 'informal'],
+      festive: ['celebration', 'party', 'festive', 'holiday']
+    };
+
+    const detectedMoods = Object.entries(moodKeywords)
+      .map(([mood, keywords]) => ({
+        mood,
+        matches: labels.filter((label: any) => 
+          keywords.some(keyword => 
+            label.description.toLowerCase().includes(keyword)
+          )
+        ).length
+      }))
+      .filter(({ matches }) => matches > 0)
+      .sort((a, b) => b.matches - a.matches);
+
+    return detectedMoods[0]?.mood || 'neutral';
   };
 
   const handleFileSelect = async (file: File) => {
@@ -87,7 +155,6 @@ const Index = () => {
 
     setIsLoading(true);
     try {
-      // Convert file to base64
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
         reader.onload = (e) => resolve(e.target?.result as string);
