@@ -22,9 +22,24 @@ export const PostPreview = ({ imageUrl, caption, overlayEnabled, platform }: Pos
     );
   }
 
+  const formatCaption = (caption: string) => {
+    const titleMatch = caption.match(/\*\*(.*?)\*\*/);
+    if (titleMatch) {
+      const title = titleMatch[1];
+      const rest = caption.replace(/\*\*.*?\*\*/, '').trim();
+      return (
+        <>
+          <p className="font-bold text-base mb-2">{`**${title}**`}</p>
+          <p>{rest}</p>
+        </>
+      );
+    }
+    return caption;
+  };
+
   return (
     <div className="space-y-6">
-      <Card className="p-6">
+      <Card className="p-6 preview-card">
         <h3 className="text-lg font-semibold mb-4">Preview</h3>
         <div className="space-y-4">
           {overlayEnabled ? (
@@ -37,9 +52,9 @@ export const PostPreview = ({ imageUrl, caption, overlayEnabled, platform }: Pos
                 className="w-full h-auto rounded-lg shadow-lg"
               />
               {caption && (
-                <p className="text-sm text-foreground mt-4 whitespace-pre-wrap">
-                  {caption}
-                </p>
+                <div className="text-sm text-foreground mt-4 whitespace-pre-wrap">
+                  {formatCaption(caption)}
+                </div>
               )}
             </>
           )}

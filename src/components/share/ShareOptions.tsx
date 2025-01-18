@@ -3,6 +3,7 @@ import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
+import html2canvas from 'html2canvas';
 
 interface ShareOptionsProps {
   imageUrl: string;
@@ -57,60 +58,24 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
 
   const handleDownload = async () => {
     try {
-      // Create a canvas to combine image and caption
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get canvas context');
+      // Find the preview card element
+      const previewCard = document.querySelector('.preview-card') as HTMLElement;
+      if (!previewCard) {
+        throw new Error('Preview card not found');
+      }
 
-      // Load the image
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = imageUrl;
+      // Use html2canvas to capture the entire card
+      const canvas = await html2canvas(previewCard, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: 'white',
       });
-
-      // Set canvas dimensions
-      canvas.width = img.width;
-      canvas.height = img.height + 200; // Extra space for caption
-
-      // Draw white background
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw image
-      ctx.drawImage(img, 0, 0);
-
-      // Configure text style
-      ctx.fillStyle = 'black';
-      ctx.font = '16px Arial';
-      ctx.textAlign = 'left';
-
-      // Draw caption
-      const words = brandedCaption.split(' ');
-      let line = '';
-      let y = img.height + 30;
-      const maxWidth = canvas.width - 40;
-      const lineHeight = 20;
-
-      words.forEach(word => {
-        const testLine = line + word + ' ';
-        const metrics = ctx.measureText(testLine);
-        
-        if (metrics.width > maxWidth) {
-          ctx.fillText(line, 20, y);
-          line = word + ' ';
-          y += lineHeight;
-        } else {
-          line = testLine;
-        }
-      });
-      ctx.fillText(line, 20, y);
 
       // Convert to blob and download
-      const blob = await new Promise<Blob>((resolve) => canvas.toBlob(blob => resolve(blob!)));
+      const blob = await new Promise<Blob>((resolve) => 
+        canvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
+      );
+      
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

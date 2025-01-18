@@ -28,10 +28,10 @@ export const CaptionEditor = ({
       const title = titleMatch[1];
       const rest = caption.replace(/\*\*.*?\*\*/, '').trim();
       return (
-        <div>
-          <div className="font-bold mb-2">{title}</div>
-          <div>{rest}</div>
-        </div>
+        <>
+          <p className="font-bold text-base mb-2">{`**${title}**`}</p>
+          <p>{rest}</p>
+        </>
       );
     }
     return caption;
@@ -81,7 +81,7 @@ export const CaptionEditor = ({
               className="min-h-[100px] w-full"
               placeholder="Edit this caption..."
             />
-            <div className="mt-2 text-sm text-muted-foreground">
+            <div className="mt-2 text-sm text-foreground">
               {formatCaption(caption)}
             </div>
           </div>
