@@ -43,36 +43,27 @@ const Index = () => {
 
     const result = data.responses[0];
     
-    // Process and structure the response according to the new requirements
+    // Process and structure the response for a more general description
     return {
-      environment: {
-        setting: {
-          labels: result.labelAnnotations
-            ?.filter((label: any) => 
-              ['indoor', 'outdoor', 'urban', 'rural', 'natural']
-              .some(term => label.description.toLowerCase().includes(term)))
-            .map((label: any) => ({
-              description: label.description,
-              confidence: (label.score * 100).toFixed(1) + '%'
-            })) || [],
-          elements: result.labelAnnotations
-            ?.filter((label: any) => 
-              ['building', 'tree', 'furniture', 'wall', 'floor']
-              .some(term => label.description.toLowerCase().includes(term)))
-            .map((label: any) => ({
-              description: label.description,
-              confidence: (label.score * 100).toFixed(1) + '%'
-            })) || []
+      generalDescription: {
+        mainScene: {
+          description: result.labelAnnotations
+            ?.slice(0, 3)
+            .map((label: any) => label.description)
+            .join(', '),
+          confidence: result.labelAnnotations?.[0]?.score ? 
+            (result.labelAnnotations[0].score * 100).toFixed(1) + '%' : 'N/A'
         },
-        ambiance: {
-          colors: result.imagePropertiesAnnotation?.dominantColors?.colors?.map((color: any) => ({
-            rgb: `rgb(${Math.round(color.color.red)}, ${Math.round(color.color.green)}, ${Math.round(color.color.blue)})`,
-            score: (color.score * 100).toFixed(1) + '%'
-          })) || [],
-          lighting: determineLighting(result.imagePropertiesAnnotation?.dominantColors?.colors)
-        }
+        setting: result.labelAnnotations
+          ?.filter((label: any) => 
+            ['indoor', 'outdoor', 'urban', 'rural', 'natural']
+            .some(term => label.description.toLowerCase().includes(term)))
+          .map((label: any) => ({
+            description: label.description,
+            confidence: (label.score * 100).toFixed(1) + '%'
+          })) || []
       },
-      context: {
+      sceneElements: {
         objects: result.localizedObjectAnnotations?.map((obj: any) => ({
           name: obj.name,
           confidence: (obj.score * 100).toFixed(1) + '%'
@@ -80,67 +71,27 @@ const Index = () => {
         landmarks: result.landmarkAnnotations?.map((landmark: any) => ({
           name: landmark.description,
           confidence: (landmark.score * 100).toFixed(1) + '%'
+        })) || []
+      },
+      visualContext: {
+        colors: result.imagePropertiesAnnotation?.dominantColors?.colors?.map((color: any) => ({
+          rgb: `rgb(${Math.round(color.color.red)}, ${Math.round(color.color.green)}, ${Math.round(color.color.blue)})`,
+          score: (color.score * 100).toFixed(1) + '%'
         })) || [],
         text: result.textAnnotations?.[0]?.description || ''
       },
-      humanInteraction: {
+      peoplePresent: {
+        detected: result.localizedObjectAnnotations
+          ?.some((obj: any) => obj.name.toLowerCase().includes('person')) || false,
         faces: result.faceAnnotations?.map((face: any) => ({
           joy: face.joyLikelihood,
           sorrow: face.sorrowLikelihood,
           anger: face.angerLikelihood,
-          surprise: face.surpriseLikelihood,
-          headwear: face.headwearLikelihood
-        })) || [],
-        peoplePresent: result.localizedObjectAnnotations
-          ?.some((obj: any) => obj.name.toLowerCase().includes('person')) || false
+          surprise: face.surpriseLikelihood
+        })) || []
       },
-      overallTheme: {
-        mood: determineMood(result),
-        safety: result.safeSearchAnnotation || {}
-      }
+      contentSafety: result.safeSearchAnnotation || {}
     };
-  };
-
-  const determineLighting = (colors: any[] = []) => {
-    if (!colors.length) return 'unknown';
-    
-    const avgBrightness = colors.reduce((acc, color) => {
-      const brightness = (
-        (color.color.red * 299) + 
-        (color.color.green * 587) + 
-        (color.color.blue * 114)
-      ) / 1000;
-      return acc + (brightness * color.score);
-    }, 0);
-
-    if (avgBrightness > 170) return 'bright';
-    if (avgBrightness > 85) return 'moderate';
-    return 'dim';
-  };
-
-  const determineMood = (result: any) => {
-    const labels = result.labelAnnotations || [];
-    const moodKeywords = {
-      calm: ['peaceful', 'serene', 'calm', 'quiet'],
-      energetic: ['active', 'dynamic', 'energetic', 'lively'],
-      formal: ['professional', 'formal', 'official'],
-      casual: ['casual', 'relaxed', 'informal'],
-      festive: ['celebration', 'party', 'festive', 'holiday']
-    };
-
-    const detectedMoods = Object.entries(moodKeywords)
-      .map(([mood, keywords]) => ({
-        mood,
-        matches: labels.filter((label: any) => 
-          keywords.some(keyword => 
-            label.description.toLowerCase().includes(keyword)
-          )
-        ).length
-      }))
-      .filter(({ matches }) => matches > 0)
-      .sort((a, b) => b.matches - a.matches);
-
-    return detectedMoods[0]?.mood || 'neutral';
   };
 
   const handleFileSelect = async (file: File) => {
