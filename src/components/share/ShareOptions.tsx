@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
-import { Instagram, Twitter, Linkedin, Facebook, TikTok, Share2, Download, Link2 } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Facebook, Share2, Download, Link2, Music2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
 
 interface ShareOptionsProps {
@@ -15,7 +15,6 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
 
   const handleShare = async (targetPlatform: Platform) => {
     try {
-      // This is a simplified example. In a real app, you'd integrate with each platform's API
       const shareData = {
         title: 'Share your post',
         text: brandedCaption,
@@ -29,7 +28,6 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
           description: `Your post has been shared to ${targetPlatform}`,
         });
       } else {
-        // Fallback for platforms without Web Share API
         window.open(`https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(imageUrl)}&text=${encodeURIComponent(brandedCaption)}`, '_blank');
       }
     } catch (error) {
@@ -94,7 +92,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       case 'Facebook':
         return <Facebook />;
       case 'TikTok':
-        return <TikTok />;
+        return <Music2 />; // Using Music2 icon as an alternative for TikTok
       default:
         return <Share2 />;
     }
