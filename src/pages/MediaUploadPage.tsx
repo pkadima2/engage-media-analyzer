@@ -140,10 +140,9 @@ export const MediaUploadPage = () => {
       if (dbError) throw dbError;
 
       setUploadedPostId(post.id);
-
       toast({
         title: "Upload successful",
-        description: "Your media has been uploaded successfully.",
+        description: "Your media has been uploaded successfully. Please complete the post details.",
       });
     } catch (error) {
       console.error('Upload error:', error);
@@ -188,7 +187,9 @@ export const MediaUploadPage = () => {
             </Button>
           </div>
 
-          <UploadProgress progress={uploadProgress} isUploading={isUploading} />
+          {isUploading && (
+            <UploadProgress progress={uploadProgress} isUploading={isUploading} />
+          )}
         </>
       )}
     </div>
