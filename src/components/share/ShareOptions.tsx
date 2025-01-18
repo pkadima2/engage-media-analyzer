@@ -1,4 +1,6 @@
 import React from 'react';
+import React, { useEffect } from 'react';  // Add this at the very top with other imports
+
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
@@ -14,8 +16,26 @@ interface ShareOptionsProps {
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
   const FB_APP_ID = '1602291440389010';
+// Then inside ShareOptions, add this before the const handleFacebookShare:
+useEffect(() => {
+  const script = document.createElement('script');
+  script.src = 'https://connect.facebook.net/en_US/sdk.js';
+  script.async = true;
+  script.defer = true;
+  script.crossOrigin = 'anonymous';
+  document.body.appendChild(script);
+  
+  window.fbAsyncInit = () => {
+    window.FB.init({
+      appId: FB_APP_ID,
+      version: 'v18.0',
+      xfbml: true
+    });
+  };
+}, []);
 
-  const handleFacebookShare = async () => {
+
+ /* const handleFacebookShare = async () => {
     try {
       // Initialize Facebook SDK if not already initialized
       if (!window.FB) {
@@ -66,7 +86,40 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
         variant: "destructive",
       });
     }
+  };*/
+
+  //========================================================
+  const handleFacebookShare = () => {
+    if (!window.FB) {
+      toast({
+        title: "Share failed",
+        description: "Please try again in a moment",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    window.FB.ui({
+      method: 'share',
+      href: imageUrl,
+      quote: brandedCaption,
+    }, function(response) {
+      if (response && !response.error_message) {
+        toast({
+          title: "Shared successfully",
+          description: "Your post has been shared to Facebook",
+        });
+      } else {
+        toast({
+          title: "Share failed",
+          description: "There was an error sharing to Facebook",
+          variant: "destructive",
+        });
+      }
+    });
   };
+
+  //=================================================
 
   const handleShare = async (targetPlatform: Platform) => {
     if (targetPlatform === 'Facebook') {
