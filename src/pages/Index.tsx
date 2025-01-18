@@ -3,7 +3,7 @@ import { MediaUpload } from '@/components/MediaUpload';
 import { ResultDisplay } from '@/components/ResultDisplay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 
 const Index = () => {
@@ -12,7 +12,7 @@ const Index = () => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('GOOGLE_VISION_API_KEY') || '');
 
   const analyzeImage = async (base64Image: string) => {
-    const response = await fetch('https://vision.googleapis.com/v1/images:annotate?key=' + apiKey, {
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ const Index = () => {
     const data = await response.json();
     
     if (data.error) {
-      throw new Error(data.error.message);
+      throw new Error(data.error.message || 'Failed to analyze image');
     }
 
     // Process and structure the response
@@ -49,7 +49,7 @@ const Index = () => {
           confidence: (label.score * 100).toFixed(1) + '%'
         })) || [],
         colors: result.imagePropertiesAnnotation?.dominantColors?.colors?.map((color: any) => ({
-          rgb: `rgb(${color.color.red}, ${color.color.green}, ${color.color.blue})`,
+          rgb: `rgb(${Math.round(color.color.red)}, ${Math.round(color.color.green)}, ${Math.round(color.color.blue)})`,
           score: (color.score * 100).toFixed(1) + '%'
         })) || []
       },
@@ -89,12 +89,12 @@ const Index = () => {
     try {
       // Convert file to base64
       const reader = new FileReader();
-      const base64Promise = new Promise((resolve) => {
-        reader.onload = (e) => resolve(e.target?.result);
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = (e) => resolve(e.target?.result as string);
         reader.readAsDataURL(file);
       });
 
-      const base64Image = await base64Promise as string;
+      const base64Image = await base64Promise;
       const analysisResult = await analyzeImage(base64Image);
       
       setResult(analysisResult);

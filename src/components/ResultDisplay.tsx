@@ -115,10 +115,11 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
                   <div key={index} className="space-y-1">
                     <p>Face {index + 1}:</p>
                     <ul className="ml-4">
-                      <li>Joy: {face.joy}</li>
-                      <li>Sorrow: {face.sorrow}</li>
-                      <li>Anger: {face.anger}</li>
-                      <li>Surprise: {face.surprise}</li>
+                      {Object.entries(face).map(([key, value]: [string, string]) => (
+                        <li key={key} className="capitalize">
+                          {key}: {value}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 ))}
@@ -127,7 +128,7 @@ export const ResultDisplay = ({ result, isLoading }: ResultDisplayProps) => {
             <div>
               <h4 className="font-medium mb-2">Content Safety</h4>
               <ul className="space-y-1">
-                {Object.entries(result.mood.safety).map(([key, value]) => (
+                {Object.entries(result.mood.safety).map(([key, value]: [string, string]) => (
                   <li key={key} className="flex justify-between">
                     <span className="capitalize">{key.replace('_', ' ')}</span>
                     <span className="text-muted-foreground">{value}</span>
