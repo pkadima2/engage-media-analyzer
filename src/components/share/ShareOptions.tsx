@@ -32,8 +32,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
             window.FB?.init({
               appId: FB_APP_ID,
               version: 'v18.0',
-              xfbml: true,
-              cookie: true
+              xfbml: true
             });
             resolve();
           };
