@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
+import { Button } from './ui/button'; // Add this import
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { MediaDropzone } from './upload/MediaDropzone';
@@ -405,7 +406,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
       <Card className="p-6">
         <PostSteps
           step={step}
-          onBack={() => setStep(prev => Math.max(1, prev - 1))}
+          onBack={handleBack}
           onNext={handleNext}
           onComplete={handleComplete}
           isNextDisabled={isNextDisabled()}
