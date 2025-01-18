@@ -21,6 +21,22 @@ export const CaptionEditor = ({
   selectedCaption,
   isLoading
 }: CaptionEditorProps) => {
+  const formatCaption = (caption: string) => {
+    // Extract title between ** ** if present
+    const titleMatch = caption.match(/\*\*(.*?)\*\*/);
+    if (titleMatch) {
+      const title = titleMatch[1];
+      const rest = caption.replace(/\*\*.*?\*\*/, '').trim();
+      return (
+        <div>
+          <div className="font-bold mb-2">{title}</div>
+          <div>{rest}</div>
+        </div>
+      );
+    }
+    return caption;
+  };
+
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -65,6 +81,9 @@ export const CaptionEditor = ({
               className="min-h-[100px] w-full"
               placeholder="Edit this caption..."
             />
+            <div className="mt-2 text-sm text-muted-foreground">
+              {formatCaption(caption)}
+            </div>
           </div>
         ))}
       </RadioGroup>

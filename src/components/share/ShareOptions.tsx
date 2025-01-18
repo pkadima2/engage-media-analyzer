@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
-import { Instagram, Twitter, Linkedin, Facebook, Share2, Download, Link2, Music2 } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
 
 interface ShareOptionsProps {
@@ -57,25 +57,78 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
 
   const handleDownload = async () => {
     try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Create a canvas to combine image and caption
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+
+      // Load the image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imageUrl;
+      });
+
+      // Set canvas dimensions
+      canvas.width = img.width;
+      canvas.height = img.height + 200; // Extra space for caption
+
+      // Draw white background
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw image
+      ctx.drawImage(img, 0, 0);
+
+      // Configure text style
+      ctx.fillStyle = 'black';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'left';
+
+      // Draw caption
+      const words = brandedCaption.split(' ');
+      let line = '';
+      let y = img.height + 30;
+      const maxWidth = canvas.width - 40;
+      const lineHeight = 20;
+
+      words.forEach(word => {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > maxWidth) {
+          ctx.fillText(line, 20, y);
+          line = word + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      });
+      ctx.fillText(line, 20, y);
+
+      // Convert to blob and download
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob(blob => resolve(blob!)));
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'engageperfect-post.jpg';
+      a.download = 'engageperfect-post.png';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Download complete",
-        description: "Your image has been downloaded successfully",
+        description: "Your post has been downloaded successfully",
       });
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         title: "Download failed",
-        description: "Failed to download the image",
+        description: "Failed to download the post",
         variant: "destructive",
       });
     }
