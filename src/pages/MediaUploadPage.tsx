@@ -1,15 +1,15 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { Camera, RotateCw, Upload, X, Check } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
-import ReactCrop, { type Crop } from 'react-image-crop';
+import { Check } from 'lucide-react';
+import { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { supabase } from '@/integrations/supabase/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { MediaDropzone } from '@/components/upload/MediaDropzone';
+import { MediaPreview } from '@/components/upload/MediaPreview';
+import { UploadProgress } from '@/components/upload/UploadProgress';
+import { processMediaFile, type MediaMetadata } from '@/utils/mediaUtils';
 
 export const MediaUploadPage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -20,7 +20,6 @@ export const MediaUploadPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -33,15 +32,6 @@ export const MediaUploadPage = () => {
       reader.readAsDataURL(file);
     }
   }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': [],
-      'video/*': []
-    },
-    multiple: false
-  });
 
   const startCamera = async () => {
     try {
@@ -78,6 +68,13 @@ export const MediaUploadPage = () => {
     setRotation((prev) => (prev + 90) % 360);
   };
 
+  const clearSelection = () => {
+    setPreview('');
+    setFile(null);
+    setCrop(undefined);
+    setRotation(0);
+  };
+
   const uploadMedia = async () => {
     if (!file) return;
 
@@ -85,46 +82,15 @@ export const MediaUploadPage = () => {
     setUploadProgress(0);
 
     try {
-      const fileExt = file.name.split('.').pop();
+      const { finalBlob, metadata } = await processMediaFile(
+        file,
+        crop,
+        rotation,
+        imageRef.current
+      );
+
+      const fileExt = metadata.originalName.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
-
-      // Apply crop and rotation if needed
-      let finalBlob = file;
-      if (crop || rotation) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const image = imageRef.current;
-
-        if (image && ctx) {
-          canvas.width = crop ? crop.width : image.width;
-          canvas.height = crop ? crop.height : image.height;
-
-          ctx.translate(canvas.width/2, canvas.height/2);
-          ctx.rotate((rotation * Math.PI) / 180);
-          ctx.translate(-canvas.width/2, -canvas.height/2);
-
-          if (crop) {
-            ctx.drawImage(
-              image,
-              crop.x,
-              crop.y,
-              crop.width,
-              crop.height,
-              0,
-              0,
-              crop.width,
-              crop.height
-            );
-          } else {
-            ctx.drawImage(image, 0, 0);
-          }
-
-          const blob = await new Promise<Blob>((resolve) => 
-            canvas.toBlob((blob) => resolve(blob!), 'image/jpeg')
-          );
-          finalBlob = new File([blob], file.name, { type: 'image/jpeg' });
-        }
-      }
 
       // Create a new XMLHttpRequest to track upload progress
       const xhr = new XMLHttpRequest();
@@ -136,23 +102,40 @@ export const MediaUploadPage = () => {
       });
 
       // Upload the file using Supabase Storage
-      const { error } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('media')
         .upload(filePath, finalBlob, {
+          contentType: metadata.contentType,
           cacheControl: '3600',
-          upsert: false,
+          upsert: false
         });
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
+
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      // Store metadata in the posts table
+      const { error: dbError } = await supabase
+        .from('posts')
+        .insert({
+          image_url: publicUrl,
+          platform: 'default', // Required field
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        });
+
+      if (dbError) throw dbError;
 
       toast({
         title: "Upload successful",
         description: "Your media has been uploaded successfully.",
       });
 
-      // Navigate back or to the next step
       navigate('/');
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "There was an error uploading your media.",
@@ -168,86 +151,28 @@ export const MediaUploadPage = () => {
       <h1 className="text-2xl font-bold text-center">Upload Media</h1>
 
       {!preview ? (
-        <Card className="p-8">
-          <div
-            {...getRootProps()}
-            className={`flex flex-col items-center justify-center gap-6 p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-              isDragActive ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="w-12 h-12 text-muted-foreground" />
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">
-                {isDragActive ? 'Drop your media here' : 'Upload your media'}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {isMobile ? 'Tap to select or capture' : 'Drag & drop or click to select'}
-              </p>
-            </div>
-          </div>
-
-          {isMobile && (
-            <div className="mt-6 flex justify-center">
-              <Button onClick={startCamera} variant="outline" className="flex items-center gap-2">
-                <Camera className="w-4 h-4" />
-                Open Camera
-              </Button>
-            </div>
-          )}
-        </Card>
+        <MediaDropzone onDrop={onDrop} onCameraStart={startCamera} />
       ) : (
-        <Card className="p-6 space-y-6">
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10"
-              onClick={() => {
-                setPreview('');
-                setFile(null);
-                setCrop(undefined);
-                setRotation(0);
-              }}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-            
-            <ReactCrop
-              crop={crop}
-              onChange={c => setCrop(c)}
-              className="max-h-[60vh] overflow-hidden rounded-lg"
-            >
-              <img
-                ref={imageRef}
-                src={preview}
-                alt="Preview"
-                style={{ transform: `rotate(${rotation}deg)` }}
-                className="max-w-full h-auto"
-              />
-            </ReactCrop>
-          </div>
-
-          <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={rotateImage}>
-              <RotateCw className="w-4 h-4 mr-2" />
-              Rotate
-            </Button>
+        <>
+          <MediaPreview
+            preview={preview}
+            crop={crop}
+            onCropChange={setCrop}
+            rotation={rotation}
+            onRotate={rotateImage}
+            onClear={clearSelection}
+            imageRef={imageRef}
+          />
+          
+          <div className="flex justify-center">
             <Button onClick={uploadMedia} disabled={isUploading}>
               <Check className="w-4 h-4 mr-2" />
               {isUploading ? 'Uploading...' : 'Upload'}
             </Button>
           </div>
 
-          {isUploading && (
-            <div className="space-y-2">
-              <Progress value={uploadProgress} />
-              <p className="text-sm text-center text-muted-foreground">
-                Uploading... {uploadProgress}%
-              </p>
-            </div>
-          )}
-        </Card>
+          <UploadProgress progress={uploadProgress} isUploading={isUploading} />
+        </>
       )}
     </div>
   );
