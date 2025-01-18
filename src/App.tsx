@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import MediaUploadPage from "./pages/MediaUploadPage";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,14 @@ const App = () => (
             element={
               <PrivateRoute>
                 <Index />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/upload"
+            element={
+              <PrivateRoute>
+                <MediaUploadPage />
               </PrivateRoute>
             }
           />
