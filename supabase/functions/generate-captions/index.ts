@@ -15,6 +15,7 @@ serve(async (req) => {
 
   try {
     const { platform, niche, goal, tone, imageMetadata } = await req.json();
+    console.log('Received request with:', { platform, niche, goal, tone, imageMetadata });
 
     const prompt = `You are the world's leading content creator and digital marketing expert with 20 years of hands-on experience. Generate 3 detailed and creative social media post captions for the ${niche} industry, designed to achieve the goal of ${goal} in a ${tone} tone, taking into consideration the following image context: ${JSON.stringify(imageMetadata)}.
 
@@ -23,6 +24,8 @@ The captions must:
 2. Use hashtags relevant to the ${niche} industry
 3. Include an optional call-to-action to drive engagement
 4. Reflect current trends or platform-specific language where applicable, including emojis`;
+
+    console.log('Sending prompt to OpenAI:', prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -42,10 +45,14 @@ The captions must:
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
       throw new Error('Failed to generate captions');
     }
 
     const data = await response.json();
+    console.log('OpenAI response:', data);
+
     const generatedText = data.choices[0].message.content;
     
     // Split the response into three separate captions
@@ -54,6 +61,8 @@ The captions must:
       .filter(caption => caption.trim())
       .map(caption => caption.replace(/^\d\.\s*/, '').trim())
       .slice(0, 3);
+
+    console.log('Generated captions:', captions);
 
     return new Response(JSON.stringify({ captions }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

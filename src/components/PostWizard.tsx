@@ -59,9 +59,13 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
     setIsGeneratingCaptions(true);
 
     try {
+      console.log('Generating captions with:', { platform, niche, goal, tone, imageMetadata });
+      
       const { data, error } = await supabase.functions.invoke('generate-captions', {
         body: { platform, niche, goal, tone, imageMetadata },
       });
+
+      console.log('Response from generate-captions:', data, error);
 
       if (error) throw error;
 
@@ -91,7 +95,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
   const handleNext = async () => {
     if (step === 1 && file && !postId) {
       await uploadMedia();
-    } else if (step === 4) {
+    } else if (step === 5) {
       await generateCaptions();
       setStep(prev => prev + 1);
     } else {
