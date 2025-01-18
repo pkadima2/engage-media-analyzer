@@ -19,9 +19,9 @@ export const initFacebookSDK = () => {
     window.fbAsyncInit = () => {
       window.FB?.init({
         appId: FACEBOOK_APP_ID,
-        cookie: true,
         xfbml: true,
-        version: 'v18.0'
+        version: 'v18.0',
+        cookie: true  // Now properly typed
       });
       resolve();
     };

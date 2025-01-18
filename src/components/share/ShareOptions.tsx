@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
-import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
+import { Instagram, Twitter, Linkedin, Facebook, Share2, Download, Link2, Music2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
-import html2canvas from 'html2canvas';
+import { initFacebookSDK } from '@/utils/facebook-config';
 
 interface ShareOptionsProps {
   imageUrl: string;
@@ -13,68 +13,50 @@ interface ShareOptionsProps {
 
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
-  const FB_APP_ID = '1602291440389010';
 
-  const handleFacebookShare = async () => {
-    try {
-      // Initialize Facebook SDK if not already initialized
-      if (!window.FB) {
-        await new Promise<void>((resolve) => {
-          // Load Facebook SDK
-          const script = document.createElement('script');
-          script.src = 'https://connect.facebook.net/en_US/sdk.js';
-          script.async = true;
-          script.defer = true;
-          script.crossOrigin = 'anonymous';
-          document.body.appendChild(script);
-          
-          window.fbAsyncInit = () => {
-            window.FB?.init({
-              appId: FB_APP_ID,
-              version: 'v18.0',
-              xfbml: true
-            });
-            resolve();
-          };
-        });
-      }
+  useEffect(() => {
+    // Initialize Facebook SDK when component mounts
+    initFacebookSDK();
+  }, []);
 
-      // Share to Facebook
-      window.FB?.ui({
-        method: 'share',
-        href: imageUrl,
-        quote: brandedCaption,
-      }, function(response) {
-        if (response && !response.error_message) {
-          toast({
-            title: "Shared successfully",
-            description: "Your post has been shared to Facebook",
-          });
-        } else {
-          toast({
-            title: "Share failed",
-            description: "There was an error sharing to Facebook",
-            variant: "destructive",
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Facebook share error:', error);
+  const handleFacebookShare = () => {
+    const FB = (window as any).FB;
+    if (!FB) {
       toast({
         title: "Share failed",
-        description: "There was an error initializing Facebook sharing",
+        description: "Facebook sharing is not available at the moment",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleShare = async (targetPlatform: Platform) => {
-    if (targetPlatform === 'Facebook') {
-      await handleFacebookShare();
       return;
     }
 
+    FB.ui({
+      method: 'share',
+      href: imageUrl,
+      quote: brandedCaption,
+    }, (response: any) => {
+      if (response && !response.error_message) {
+        toast({
+          title: "Shared successfully",
+          description: "Your post has been shared to Facebook",
+        });
+      } else {
+        toast({
+          title: "Share failed",
+          description: "There was an error sharing to Facebook",
+          variant: "destructive",
+        });
+      }
+    });
+  };
+
+  const handleShare = async (targetPlatform: Platform) => {
     try {
+      if (targetPlatform === 'Facebook') {
+        handleFacebookShare();
+        return;
+      }
+
       const shareData = {
         title: 'Share your post',
         text: brandedCaption,
@@ -88,7 +70,23 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
           description: `Your post has been shared to ${targetPlatform}`,
         });
       } else {
-        window.open(`https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(imageUrl)}&text=${encodeURIComponent(brandedCaption)}`, '_blank');
+        const platformUrls: Record<Platform, string> = {
+          Twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(brandedCaption)}&url=${encodeURIComponent(imageUrl)}`,
+          LinkedIn: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(imageUrl)}`,
+          Instagram: '#', // Instagram doesn't support direct sharing via URL
+          Facebook: '#',
+          TikTok: '#'
+        };
+
+        if (platformUrls[targetPlatform] !== '#') {
+          window.open(platformUrls[targetPlatform], '_blank');
+        } else {
+          toast({
+            title: "Share not available",
+            description: `Direct sharing to ${targetPlatform} is not supported. Please copy the link and share manually.`,
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -117,42 +115,25 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
 
   const handleDownload = async () => {
     try {
-      // Find the preview card element
-      const previewCard = document.querySelector('.preview-card') as HTMLElement;
-      if (!previewCard) {
-        throw new Error('Preview card not found');
-      }
-
-      // Use html2canvas to capture the entire card
-      const canvas = await html2canvas(previewCard, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: 'white',
-      });
-
-      // Convert to blob and download
-      const blob = await new Promise<Blob>((resolve) => 
-        canvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
-      );
-      
-      const url = URL.createObjectURL(blob);
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'engageperfect-post.png';
+      a.download = 'engageperfect-post.jpg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(url);
       
       toast({
         title: "Download complete",
-        description: "Your post has been downloaded successfully",
+        description: "Your image has been downloaded successfully",
       });
     } catch (error) {
-      console.error('Download error:', error);
       toast({
         title: "Download failed",
-        description: "Failed to download the post",
+        description: "Failed to download the image",
         variant: "destructive",
       });
     }
@@ -169,7 +150,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       case 'Facebook':
         return <Facebook />;
       case 'TikTok':
-        return <Music2 />; // Using Music2 icon as an alternative for TikTok
+        return <Music2 />;
       default:
         return <Share2 />;
     }
@@ -184,7 +165,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       {/* Primary share button for selected platform */}
       <Button 
         className="w-full"
-        onClick={() => platform === 'Facebook' ? handleFacebookShare() : handleShare(platform)}
+        onClick={() => handleShare(platform)}
       >
         {getPlatformIcon(platform)}
         Share to {platform}
@@ -198,7 +179,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
             <Button
               key={p}
               variant="outline"
-              onClick={() => p === 'Facebook' ? handleFacebookShare() : handleShare(p)}
+              onClick={() => handleShare(p)}
               className="flex items-center gap-2"
             >
               {getPlatformIcon(p)}
