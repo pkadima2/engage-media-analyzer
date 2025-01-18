@@ -11,15 +11,34 @@ interface ShareOptionsProps {
   platform: Platform;
 }
 
+declare global {
+  interface Window {
+    FB?: {
+      init: (params: {
+        appId: string;
+        version: string;
+        xfbml: boolean;
+      }) => void;
+      ui: (params: {
+        method: string;
+        href?: string;
+        quote?: string;
+      }, callback?: (response: any) => void) => void;
+    };
+    fbAsyncInit?: () => void;
+  }
+}
+
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
   const FB_APP_ID = '1602291440389010';
 
   const handleFacebookShare = async () => {
     try {
-      // Initialize Facebook SDK
+      // Initialize Facebook SDK if not already initialized
       if (!window.FB) {
-        window.FB = await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
+          // Load Facebook SDK
           const script = document.createElement('script');
           script.src = 'https://connect.facebook.net/en_US/sdk.js';
           script.async = true;
@@ -33,7 +52,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
               version: 'v18.0',
               xfbml: true
             });
-            resolve(window.FB!);
+            resolve();
           };
         });
       }
@@ -58,6 +77,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
         }
       });
     } catch (error) {
+      console.error('Facebook share error:', error);
       toast({
         title: "Share failed",
         description: "There was an error initializing Facebook sharing",
@@ -182,7 +202,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       {/* Primary share button for selected platform */}
       <Button 
         className="w-full"
-        onClick={() => handleShare(platform)}
+        onClick={() => platform === 'Facebook' ? handleFacebookShare() : handleShare(platform)}
       >
         {getPlatformIcon(platform)}
         Share to {platform}
@@ -196,7 +216,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
             <Button
               key={p}
               variant="outline"
-              onClick={() => handleShare(p)}
+              onClick={() => p === 'Facebook' ? handleFacebookShare() : handleShare(p)}
               className="flex items-center gap-2"
             >
               {getPlatformIcon(p)}
