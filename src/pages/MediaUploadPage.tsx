@@ -126,15 +126,21 @@ export const MediaUploadPage = () => {
         }
       }
 
+      // Create a new XMLHttpRequest to track upload progress
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentage = (event.loaded / event.total) * 100;
+          setUploadProgress(Math.round(percentage));
+        }
+      });
+
+      // Upload the file using Supabase Storage
       const { error } = await supabase.storage
         .from('media')
         .upload(filePath, finalBlob, {
           cacheControl: '3600',
           upsert: false,
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100;
-            setUploadProgress(Math.round(percentage));
-          },
         });
 
       if (error) throw error;
