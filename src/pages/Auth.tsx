@@ -69,6 +69,12 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: provider === 'linkedin' ? {
+            client_id: '77k6t45eyhvnm0'
+          } : undefined
+        }
       });
       if (error) throw error;
     } catch (error) {
