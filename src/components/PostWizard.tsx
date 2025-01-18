@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Card } from './ui/card';
-import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { MediaDropzone } from './upload/MediaDropzone';
@@ -10,7 +8,9 @@ import { MediaPreview } from './upload/MediaPreview';
 import { UploadProgress } from './upload/UploadProgress';
 import { processMediaFile } from '@/utils/mediaUtils';
 import { CaptionEditor } from './CaptionEditor';
-import { CaptionPreview } from './preview/CaptionPreview';
+import { PostSteps } from './post/PostSteps';
+import { CaptionSettings } from './post/CaptionSettings';
+import { PostPreview } from './preview/PostPreview';
 
 type Platform = 'Instagram' | 'LinkedIn' | 'Facebook' | 'Twitter' | 'TikTok';
 type Goal = 'Sales' | 'Drive Engagement' | 'Grow Followers' | 'Share Knowledge' | 'Brand Awareness';
@@ -26,6 +26,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
   const [niche, setNiche] = useState('');
   const [goal, setGoal] = useState<Goal>();
   const [tone, setTone] = useState<Tone>();
+  const [overlayEnabled, setOverlayEnabled] = useState(false);
   
   // Media upload state
   const [file, setFile] = useState<File | null>(null);
@@ -360,6 +361,10 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
               <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm">6</div>
               <h2 className="text-xl font-semibold">Generated Captions</h2>
             </div>
+            <CaptionSettings
+              overlayEnabled={overlayEnabled}
+              onOverlayChange={setOverlayEnabled}
+            />
             <CaptionEditor
               captions={captions}
               onSelect={setSelectedCaption}
@@ -376,70 +381,44 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
     }
   };
 
+  const isNextDisabled = () => {
+    switch (step) {
+      case 1:
+        return !preview;
+      case 2:
+        return !platform;
+      case 3:
+        return !niche;
+      case 4:
+        return !goal;
+      case 5:
+        return !tone;
+      case 6:
+        return !selectedCaption;
+      default:
+        return false;
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card className="p-6">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5, 6].map((number) => (
-              <div
-                key={number}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === number
-                    ? 'bg-primary text-white'
-                    : step > number
-                    ? 'bg-primary/20 text-primary'
-                    : 'bg-gray-100 text-gray-400'
-                }`}
-              >
-                {number}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {renderStep()}
-
-        <div className="flex justify-between mt-8">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            disabled={step === 1}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
-          
-          {step < 6 ? (
-            <Button
-              onClick={handleNext}
-              disabled={
-                (step === 1 && !preview) ||
-                (step === 2 && !platform) ||
-                (step === 3 && !niche) ||
-                (step === 4 && !goal) ||
-                (step === 5 && !tone)
-              }
-            >
-              Next
-            </Button>
-          ) : (
-            <Button
-              onClick={handleComplete}
-              disabled={!selectedCaption}
-            >
-              Complete
-            </Button>
-          )}
-        </div>
+        <PostSteps
+          step={step}
+          onBack={() => setStep(prev => Math.max(1, prev - 1))}
+          onNext={handleNext}
+          onComplete={handleComplete}
+          isNextDisabled={isNextDisabled()}
+        >
+          {renderStep()}
+        </PostSteps>
       </Card>
 
-      {/* Preview Panel */}
       <div className="sticky top-6">
-        <CaptionPreview 
-          imageUrl={preview} 
-          caption={selectedCaption || ''} 
+        <PostPreview 
+          imageUrl={preview}
+          caption={selectedCaption || ''}
+          overlayEnabled={overlayEnabled}
         />
       </div>
     </div>
