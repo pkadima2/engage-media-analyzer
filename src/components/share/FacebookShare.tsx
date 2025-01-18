@@ -19,10 +19,14 @@ export const FacebookShare = ({ imageUrl, caption }: FacebookShareProps) => {
         throw new Error('Facebook SDK not loaded');
       }
 
+      // Ensure we have an absolute URL
+      const absoluteUrl = imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
+
       window.FB.ui({
         method: 'share',
-        href: imageUrl,
+        href: absoluteUrl,
         quote: caption,
+        display: 'popup',
       }, function(response) {
         if (response && !response.error_message) {
           toast({

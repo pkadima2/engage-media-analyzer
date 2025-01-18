@@ -9,7 +9,8 @@ export const initFacebookSDK = () => {
           appId: FB_APP_ID,
           version: 'v18.0',
           xfbml: true,
-          cookie: true
+          cookie: true,
+          status: true // Enable status checking
         });
         resolve();
       } else {
@@ -19,7 +20,8 @@ export const initFacebookSDK = () => {
             appId: FB_APP_ID,
             version: 'v18.0',
             xfbml: true,
-            cookie: true
+            cookie: true,
+            status: true // Enable status checking
           });
           resolve();
         };

@@ -3,12 +3,14 @@ interface FacebookInitParams {
   version: string;
   xfbml: boolean;
   cookie?: boolean;
+  status?: boolean;
 }
 
 interface FacebookShareParams {
   method: string;
   href?: string;
   quote?: string;
+  display?: string;
 }
 
 interface Window {
