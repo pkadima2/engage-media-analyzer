@@ -67,10 +67,11 @@ const Auth = () => {
 
   const handleSocialAuth = async (provider: 'google' | 'facebook' | 'linkedin') => {
     try {
+      const currentUrl = window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${currentUrl}/auth/callback`,
           queryParams: provider === 'linkedin' ? {
             client_id: '77k6t45eyhvnm0'
           } : undefined
