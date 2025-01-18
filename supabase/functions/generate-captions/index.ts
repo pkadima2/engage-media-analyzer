@@ -26,13 +26,42 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
-    const prompt = `You are the world's leading content creator and digital marketing expert with 20 years of hands-on experience. Generate 3 detailed and creative social media post captions for the ${niche} industry, designed to achieve the goal of ${goal} in a ${tone} tone, taking into consideration the following image context: ${JSON.stringify(imageMetadata)}.
+    const prompt = `You are the world's leading content creator and digital marketing expert with 20 years of hands-on experience. your goal is to create  3 detailed and creative social media post captions for the ${niche} industry, designed to achieve the goal of ${goal} in a ${tone} tone, taking into consideration the following image context: ${JSON.stringify(imageMetadata)}.
 
+    
 The captions must:
-1. Be concise and tailored to ${platform}'s audience and character limits
-2. Use hashtags relevant to the ${niche} industry
-3. Include an optional call-to-action to drive engagement
-4. Reflect current trends or platform-specific language where applicable, including emojis`;
+1. Ensure captions are concise and meet ${platform}'s character limits (e.g., Instagram: 2200 characters, Twitter: 280 characters).
+2. Incorporate hashtags that are highly relevant to the ${niche} industry to maximize visibility and engagement.
+3. Include an optional, effective call-to-action to inspire engagement (e.g., "Comment below," "Tag a friend," "Share your thoughts," "Did you know?" "Fact," or "Insight").
+4. Reflect current trends current trends, use platform-specific language, and include emojis where appropriate to match audience expectations and boost relatability.
+
+Caption 1:
+
+[A creative, catchy title highlighting the post's theme.
+as a paragraph ready to be shared. 
+Write a 1-2 sentence caption in a ${tone} tone, including hashtags.
+Provide a clear and actionable CTA encouraging user engagement.]
+
+Caption 2:
+[Another engaging and unique title for the post.]
+as a paragraph ready to be shared. 
+[Craft an attention-grabbing caption that resonates with the ${platform}'s audience, with relevant hashtags.
+Add a compelling CTA to inspire interaction (e.g., shares, likes, or comments).]
+
+Caption 3:
+
+[A third compelling and innovative title idea.]
+as a paragraph ready to be shared. 
+[Provide a brief but impactful caption using hashtags and keeping the ${tone}.
+Suggest an actionable CTA to encourage user engagement and sharing.]
+
+
+Important Notes:
+- Captions must be practical, innovative, and specifically tailored to the ${niche} industry.
+- Ensure all captions reflect the latest trends and best practices for content creation on ${platform}.; 
+
+
+`;
 
     console.log('Sending prompt to OpenAI:', prompt);
 
