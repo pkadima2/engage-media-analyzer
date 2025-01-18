@@ -82,6 +82,13 @@ export const MediaUploadPage = () => {
     setUploadProgress(0);
 
     try {
+      // Get the current user's ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+
       const { finalBlob, metadata } = await processMediaFile(
         file,
         crop,
@@ -117,13 +124,13 @@ export const MediaUploadPage = () => {
         .from('media')
         .getPublicUrl(filePath);
 
-      // Store metadata in the posts table
+      // Store metadata in the posts table with the user_id
       const { error: dbError } = await supabase
         .from('posts')
         .insert({
           image_url: publicUrl,
-          platform: 'default', // Required field
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          platform: 'default',
+          user_id: user.id // Set the user_id to the current user's ID
         });
 
       if (dbError) throw dbError;
