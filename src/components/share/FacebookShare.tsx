@@ -2,6 +2,7 @@ import React from 'react';
 import { Facebook } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
+import { initFacebookSDK } from '@/utils/facebook-config';
 
 interface FacebookShareProps {
   imageUrl: string;
@@ -11,6 +12,9 @@ interface FacebookShareProps {
 export const FacebookShare = ({ imageUrl, caption }: FacebookShareProps) => {
   const handleShare = async () => {
     try {
+      // Initialize Facebook SDK first
+      await initFacebookSDK();
+      
       if (!window.FB) {
         throw new Error('Facebook SDK not loaded');
       }
@@ -28,7 +32,7 @@ export const FacebookShare = ({ imageUrl, caption }: FacebookShareProps) => {
         } else {
           toast({
             title: "Share failed",
-            description: "There was an error sharing to Facebook",
+            description: response?.error_message || "There was an error sharing to Facebook",
             variant: "destructive",
           });
         }
