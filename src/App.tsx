@@ -14,44 +14,73 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Check current session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(!!session);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === 'SIGNED_OUT') {
+        // Clear any stored session data
+        supabase.auth.signOut();
+      }
       setSession(!!session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Show loading state while checking session
   if (session === null) {
-    return null; // Loading state
+    return null;
   }
 
-  return session ? <>{children}</> : <Navigate to="/auth" />;
+  // Redirect to auth if no session
+  if (!session) {
+    return <Navigate to="/auth" />;
+  }
+
+  return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <Index />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Initialize session check
+    const initSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error checking session:', error);
+        await supabase.auth.signOut();
+      }
+    };
+    
+    initSession();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Index />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
