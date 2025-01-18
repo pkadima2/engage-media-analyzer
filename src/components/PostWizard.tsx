@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
-import { Button } from './ui/button'; // Add this import
+import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { MediaDropzone } from './upload/MediaDropzone';
@@ -13,7 +13,7 @@ import { PostSteps } from './post/PostSteps';
 import { CaptionSettings } from './post/CaptionSettings';
 import { PostPreview } from './preview/PostPreview';
 
-type Platform = 'Instagram' | 'LinkedIn' | 'Facebook' | 'Twitter' | 'TikTok';
+export type Platform = 'Instagram' | 'LinkedIn' | 'Facebook' | 'Twitter' | 'TikTok';
 type Goal = 'Sales' | 'Drive Engagement' | 'Grow Followers' | 'Share Knowledge' | 'Brand Awareness';
 type Tone = 'Professional' | 'Casual' | 'Humorous' | 'Persuasive' | 'Inspirational';
 
@@ -420,6 +420,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
           imageUrl={preview}
           caption={selectedCaption || ''}
           overlayEnabled={overlayEnabled}
+          platform={platform}
         />
       </div>
     </div>
