@@ -1,6 +1,4 @@
-import React from 'react';
-import React, { useEffect } from 'react';  // Add this at the very top with other imports
-
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
@@ -16,24 +14,23 @@ interface ShareOptionsProps {
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
   const FB_APP_ID = '1602291440389010';
-// Then inside ShareOptions, add this before the const handleFacebookShare:
-useEffect(() => {
-  const script = document.createElement('script');
-  script.src = 'https://connect.facebook.net/en_US/sdk.js';
-  script.async = true;
-  script.defer = true;
-  script.crossOrigin = 'anonymous';
-  document.body.appendChild(script);
-  
-  window.fbAsyncInit = () => {
-    window.FB.init({
-      appId: FB_APP_ID,
-      version: 'v18.0',
-      xfbml: true
-    });
-  };
-}, []);
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = 'anonymous';
+    document.body.appendChild(script);
+    
+    window.fbAsyncInit = () => {
+      window.FB.init({
+        appId: FB_APP_ID,
+        version: 'v18.0',
+        xfbml: true
+      });
+    };
+  }, []);
 
  /* const handleFacebookShare = async () => {
     try {
@@ -88,7 +85,6 @@ useEffect(() => {
     }
   };*/
 
-  //========================================================
   const handleFacebookShare = () => {
     if (!window.FB) {
       toast({
@@ -118,8 +114,6 @@ useEffect(() => {
       }
     });
   };
-
-  //=================================================
 
   const handleShare = async (targetPlatform: Platform) => {
     if (targetPlatform === 'Facebook') {
