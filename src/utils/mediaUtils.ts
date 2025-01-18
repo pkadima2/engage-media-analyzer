@@ -3,8 +3,8 @@ export const processMediaFile = async (
   crop?: { x: number; y: number; width: number; height: number },
   rotation?: number,
   imageRef?: HTMLImageElement | null
-): Promise<{ finalBlob: Blob; metadata: MediaMetadata }> => {
-  let finalBlob = file;
+): Promise<{ finalBlob: File; metadata: MediaMetadata }> => {
+  let finalBlob: File = file;
   
   if ((crop || rotation) && imageRef) {
     const canvas = document.createElement('canvas');
@@ -37,7 +37,13 @@ export const processMediaFile = async (
       const blob = await new Promise<Blob>((resolve) => 
         canvas.toBlob((blob) => resolve(blob!), 'image/jpeg')
       );
-      finalBlob = blob;
+      
+      // Convert Blob to File
+      finalBlob = new File(
+        [blob],
+        file.name,
+        { type: 'image/jpeg', lastModified: Date.now() }
+      );
     }
   }
 
