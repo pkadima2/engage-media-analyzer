@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
+import { initFacebookSDK, FB_APP_ID } from '@/utils/facebook-config';
 import html2canvas from 'html2canvas';
 
 interface ShareOptionsProps {
@@ -13,35 +14,20 @@ interface ShareOptionsProps {
 
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
-  const FB_APP_ID = '1602291440389010';
+
+  useEffect(() => {
+    initFacebookSDK().catch(error => {
+      console.error('Failed to initialize Facebook SDK:', error);
+    });
+  }, []);
 
   const handleFacebookShare = async () => {
     try {
-      // Initialize Facebook SDK if not already initialized
       if (!window.FB) {
-        await new Promise<void>((resolve) => {
-          // Load Facebook SDK
-          const script = document.createElement('script');
-          script.src = 'https://connect.facebook.net/en_US/sdk.js';
-          script.async = true;
-          script.defer = true;
-          script.crossOrigin = 'anonymous';
-          document.body.appendChild(script);
-          
-          window.fbAsyncInit = () => {
-            window.FB?.init({
-              appId: FB_APP_ID,
-              version: 'v18.0',
-              xfbml: true,
-              cookie: true
-            });
-            resolve();
-          };
-        });
+        throw new Error('Facebook SDK not loaded');
       }
 
-      // Share to Facebook
-      window.FB?.ui({
+      window.FB.ui({
         method: 'share',
         href: imageUrl,
         quote: brandedCaption,
@@ -170,7 +156,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       case 'Facebook':
         return <Facebook />;
       case 'TikTok':
-        return <Music2 />; // Using Music2 icon as an alternative for TikTok
+        return <Music2 />;
       default:
         return <Share2 />;
     }
