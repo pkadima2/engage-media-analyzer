@@ -35,23 +35,23 @@ The captions must:
 
 Format each caption exactly like this (with no variations):
 
-<b>Title 1</b>
+[b]Title 1[/b]
 [Caption text 1]
 [Hashtags 1]
 [Call to action 1]
 
-<b>Title 2</b>
-[Caption text 2]
+[b]Title 2[/b]
+[Caption text 2] 
 [Hashtags 2]
 [Call to action 2]
 
-<b>Title 3</b>
+[b]Title 3[/b]
 [Caption text 3]
 [Hashtags 3]
 [Call to action 3]
 
 Important:
-- Each caption must start with a title in bold (using ** **)
+- Each caption must start with a title in bold (using [b] [/b])
 - Keep captions practical and innovative
 - Ensure all captions reflect best practices for ${platform}
 - Do not use separators like "---" between captions
