@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,23 +26,42 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
-    const prompt = `Generate exactly 3 social media post captions for the ${niche} industry, designed to achieve ${goal} with a ${tone} tone. Consider this image context: ${JSON.stringify(imageMetadata)}.
+    const prompt = `You are the world's leading content creator and digital marketing expert with 20 years of hands-on experience. your goal is to create  3 detailed and creative social media post captions for the ${niche} industry, designed to achieve the goal of ${goal} in a ${tone} tone, taking into consideration the following image context: ${JSON.stringify(imageMetadata)}.
 
-Each caption must follow this exact format:
-Title: [A bold, attention-grabbing title]
-[Main caption text with emojis and natural language]
-[2-3 relevant hashtags]
-[Engaging call-to-action]
+    
+The captions must:
+1. Ensure captions are concise and meet ${platform}'s character limits (e.g., Instagram: 2200 characters, Twitter: 280 characters).
+2. Incorporate hashtags that are highly relevant to the ${niche} industry to maximize visibility and engagement.
+3. Include an optional, effective call-to-action to inspire engagement (e.g., "Comment below," "Tag a friend," "Share your thoughts," "Did you know?" "Fact," or "Insight").
+4. Reflect current trends current trends, use platform-specific language, and include emojis where appropriate to match audience expectations and boost relatability.
 
-Rules:
-1. Keep captions within ${platform}'s character limits
-2. Use relevant hashtags for the ${niche} industry
-3. Include an engaging call-to-action
-4. Use emojis naturally
-5. Match ${platform}'s style
-6. Each caption must be complete and unique
+Caption 1:
 
-Generate exactly 3 captions, each clearly separated.`;
+[A creative, catchy title highlighting the post's theme.
+as a paragraph ready to be shared. 
+Write a 1-2 sentence caption in a ${tone} tone, including hashtags.
+Provide a clear and actionable CTA encouraging user engagement.]
+
+Caption 2:
+[Another engaging and unique title for the post.]
+as a paragraph ready to be shared. 
+[Craft an attention-grabbing caption that resonates with the ${platform}'s audience, with relevant hashtags.
+Add a compelling CTA to inspire interaction (e.g., shares, likes, or comments).]
+
+Caption 3:
+
+[A third compelling and innovative title idea.]
+as a paragraph ready to be shared. 
+[Provide a brief but impactful caption using hashtags and keeping the ${tone}.
+Suggest an actionable CTA to encourage user engagement and sharing.]
+
+
+Important Notes:
+- Captions must be practical, innovative, and specifically tailored to the ${niche} industry.
+- Ensure all captions reflect the latest trends and best practices for content creation on ${platform}.; 
+
+
+`;
 
     console.log('Sending prompt to OpenAI:', prompt);
 
@@ -73,24 +93,14 @@ Generate exactly 3 captions, each clearly separated.`;
 
     const generatedText = data.choices[0].message.content;
     
-    // Split and format captions
+    // Split the response into three separate captions
     const captions = generatedText
-      .split(/\n\n(?=Title:)/g)
+      .split(/\n\n|\n(?=\d\.)/g)
       .filter(caption => caption.trim())
-      .map(caption => {
-        const parts = caption.split('\n');
-        const title = parts[0].replace('Title:', '').trim();
-        const content = parts.slice(1).join('\n').trim();
-        return `**${title}**\n\n${content}`;
-      })
+      .map(caption => caption.replace(/^\d\.\s*/, '').trim())
       .slice(0, 3);
 
-    // Ensure we always have exactly 3 captions
-    while (captions.length < 3) {
-      captions.push(captions[0]); // Duplicate first caption if we don't have enough
-    }
-
-    console.log('Formatted captions:', captions);
+    console.log('Generated captions:', captions);
 
     return new Response(JSON.stringify({ captions }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

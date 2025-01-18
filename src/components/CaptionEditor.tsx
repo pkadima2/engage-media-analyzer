@@ -21,21 +21,6 @@ export const CaptionEditor = ({
   selectedCaption,
   isLoading
 }: CaptionEditorProps) => {
-  const formatCaption = (caption: string) => {
-    // Split the caption into title and content
-    const [title, ...content] = caption.split('\n\n');
-    return (
-      <div className="space-y-2">
-        <div className="font-bold text-lg">
-          {title.replace(/\*\*/g, '')}
-        </div>
-        <div className="whitespace-pre-wrap">
-          {content.join('\n\n')}
-        </div>
-      </div>
-    );
-  };
-
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -74,13 +59,10 @@ export const CaptionEditor = ({
                 Option {index + 1}
               </Label>
             </div>
-            <div className="pl-6">
-              {formatCaption(caption)}
-            </div>
             <Textarea
               value={caption}
               onChange={(e) => onEdit(index, e.target.value)}
-              className="min-h-[100px] w-full mt-2"
+              className="min-h-[100px] w-full"
               placeholder="Edit this caption..."
             />
           </div>
