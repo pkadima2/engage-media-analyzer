@@ -9,7 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { MediaDropzone } from '@/components/upload/MediaDropzone';
 import { MediaPreview } from '@/components/upload/MediaPreview';
 import { UploadProgress } from '@/components/upload/UploadProgress';
-import { processMediaFile, type MediaMetadata } from '@/utils/mediaUtils';
+import { processMediaFile } from '@/utils/mediaUtils';
+import { PostWizard } from '@/components/PostWizard';
 
 export const MediaUploadPage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -18,6 +19,7 @@ export const MediaUploadPage = () => {
   const [rotation, setRotation] = useState(0);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedPostId, setUploadedPostId] = useState<string | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const navigate = useNavigate();
 
@@ -125,22 +127,24 @@ export const MediaUploadPage = () => {
         .getPublicUrl(filePath);
 
       // Store metadata in the posts table with the user_id
-      const { error: dbError } = await supabase
+      const { data: post, error: dbError } = await supabase
         .from('posts')
         .insert({
           image_url: publicUrl,
           platform: 'default',
-          user_id: user.id // Set the user_id to the current user's ID
-        });
+          user_id: user.id
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
+
+      setUploadedPostId(post.id);
 
       toast({
         title: "Upload successful",
         description: "Your media has been uploaded successfully.",
       });
-
-      navigate('/');
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -153,12 +157,18 @@ export const MediaUploadPage = () => {
     }
   };
 
+  const handleWizardComplete = () => {
+    navigate('/');
+  };
+
   return (
     <div className="container max-w-2xl py-8 space-y-6 animate-fade-up">
       <h1 className="text-2xl font-bold text-center">Upload Media</h1>
 
       {!preview ? (
         <MediaDropzone onDrop={onDrop} onCameraStart={startCamera} />
+      ) : uploadedPostId ? (
+        <PostWizard postId={uploadedPostId} onComplete={handleWizardComplete} />
       ) : (
         <>
           <MediaPreview
