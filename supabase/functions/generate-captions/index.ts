@@ -41,7 +41,7 @@ Format each caption exactly like this (with no variations):
 [Call to action 1]
 
 [b]Title 2[/b]
-[Caption text 2]
+[Caption text 2] 
 [Hashtags 2]
 [Call to action 2]
 
@@ -51,7 +51,7 @@ Format each caption exactly like this (with no variations):
 [Call to action 3]
 
 Important:
-- Each caption must start with a title in bold (using ** **)
+- Each caption must start with a title in bold (using [b] [/b])
 - Keep captions practical and innovative
 - Ensure all captions reflect best practices for ${platform}
 - Do not use separators like "---" between captions
