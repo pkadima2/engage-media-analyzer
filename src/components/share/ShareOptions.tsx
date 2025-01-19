@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
+import html2canvas from 'html2canvas';
 
 interface ShareOptionsProps {
   imageUrl: string;
