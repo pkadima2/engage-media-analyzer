@@ -34,17 +34,24 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
 
   const handleLinkedInShare = () => {
     try {
-      // LinkedIn sharing URL
-      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent('Check out my post')}&summary=${encodeURIComponent(brandedCaption)}`;
+      const linkedInUrl = new URL('https://www.linkedin.com/sharing/share-offsite/');
+      const params = new URLSearchParams({
+        url: window.location.href,
+        title: 'Check out my post',
+        summary: brandedCaption,
+        source: 'EngagePerfect',
+        mini: 'true',
+        image: imageUrl
+      });
+      linkedInUrl.search = params.toString();
       
-      // Open popup window
       const width = 550;
       const height = 400;
       const left = (window.screen.width / 2) - (width / 2);
       const top = (window.screen.height / 2) - (height / 2);
       
       const popup = window.open(
-        linkedInUrl,
+        linkedInUrl.toString(),
         'Share on LinkedIn',
         `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
       );
@@ -80,8 +87,10 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
   
     window.FB.ui({
       method: 'share',
-      href: imageUrl,
+      href: window.location.href,
       quote: brandedCaption,
+      picture: imageUrl,
+      caption: 'Check out my post on EngagePerfect',
     }, function(response) {
       if (response && !response.error_message) {
         toast({
@@ -107,11 +116,21 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
         case 'Facebook':
           handleFacebookShare();
           break;
+        case 'Twitter':
+          const twitterUrl = new URL('https://twitter.com/intent/tweet');
+          const twitterParams = new URLSearchParams({
+            text: brandedCaption,
+            url: window.location.href,
+            via: 'EngagePerfect'
+          });
+          window.open(`${twitterUrl}?${twitterParams}`, '_blank');
+          break;
         default:
           const shareData = {
             title: 'Share your post',
             text: brandedCaption,
-            url: imageUrl,
+            url: window.location.href,
+            files: [await (await fetch(imageUrl)).blob()]
           };
 
           if (navigator.share && navigator.canShare(shareData)) {
@@ -121,10 +140,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
               description: `Your post has been shared to ${targetPlatform}`,
             });
           } else {
-            const shareUrl = targetPlatform === 'Twitter' 
-              ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(brandedCaption)}&url=${encodeURIComponent(imageUrl)}`
-              : `https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(imageUrl)}&text=${encodeURIComponent(brandedCaption)}`;
-            
+            const shareUrl = `https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(brandedCaption)}`;
             window.open(shareUrl, '_blank');
           }
       }
