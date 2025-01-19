@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
-import html2canvas from 'html2canvas';
 
 interface ShareOptionsProps {
   imageUrl: string;
@@ -39,9 +38,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
         url: window.location.href,
         title: 'Check out my post',
         summary: brandedCaption,
-        source: 'EngagePerfect',
-        mini: 'true',
-        image: imageUrl
+        source: 'EngagePerfect'
       });
       linkedInUrl.search = params.toString();
       
@@ -88,7 +85,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
     window.FB.ui({
       method: 'share',
       href: window.location.href,
-      quote: brandedCaption,
+      quote: brandedCaption
     }, function(response) {
       if (response && !response.error_message) {
         toast({
@@ -126,7 +123,10 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
         default:
           const response = await fetch(imageUrl);
           const blob = await response.blob();
-          const file = new File([blob], 'share-image.jpg', { type: blob.type });
+          const file = new File([blob], 'share-image.jpg', { 
+            type: blob.type,
+            lastModified: Date.now()
+          });
           
           const shareData = {
             title: 'Share your post',
