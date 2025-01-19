@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
 import { SocialButton } from './SocialButton';
-import { downloadPost, copyToClipboard, shareToLinkedIn } from '@/utils/shareUtils';
+import { downloadPost, copyToClipboard } from '@/utils/shareUtils';
 import { toast } from '@/hooks/use-toast';
 
 interface ShareOptionsProps {
@@ -16,71 +16,137 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://connect.facebook.net/en_US/sdk.js';
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = 'anonymous';
-    document.body.appendChild(script);
-    
-    window.fbAsyncInit = () => {
-      window.FB.init({
-        appId: FB_APP_ID,
-        version: 'v18.0',
-        xfbml: true
-      });
+    // Load Facebook SDK
+    const loadFacebookSDK = () => {
+      const script = document.createElement('script');
+      script.src = 'https://connect.facebook.net/en_US/sdk.js';
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = 'anonymous';
+      document.body.appendChild(script);
+      
+      window.fbAsyncInit = () => {
+        window.FB.init({
+          appId: FB_APP_ID,
+          version: 'v18.0',
+          xfbml: true
+        });
+      };
     };
+
+    // Load LinkedIn SDK
+    const loadLinkedInSDK = () => {
+      const script = document.createElement('script');
+      script.src = 'https://platform.linkedin.com/in.js';
+      script.type = 'text/javascript';
+      script.innerHTML = `lang: en_US\napi_key: YOUR_API_KEY`;
+      document.body.appendChild(script);
+    };
+
+    loadFacebookSDK();
+    loadLinkedInSDK();
   }, []);
 
-  const handleFacebookShare = () => {
+  const handleFacebookShare = async () => {
     if (!window.FB) {
       toast({
         title: "Share failed",
-        description: "Please try again in a moment",
+        description: "Facebook SDK not loaded. Please try again.",
         variant: "destructive",
       });
       return;
     }
-  
-    window.FB.ui({
-      method: 'share',
-      href: window.location.href,
-      quote: brandedCaption
-    }, function(response) {
-      if (response && !response.error_message) {
-        toast({
-          title: "Shared successfully",
-          description: "Your post has been shared to Facebook",
-        });
-      } else {
-        toast({
-          title: "Share failed",
-          description: "There was an error sharing to Facebook",
-          variant: "destructive",
-        });
-      }
-    });
+
+    try {
+      await window.FB.ui({
+        method: 'share',
+        href: imageUrl,
+        quote: brandedCaption,
+        hashtag: '#EngagePerfect'
+      });
+      
+      toast({
+        title: "Shared successfully",
+        description: "Your post has been shared to Facebook",
+      });
+    } catch (error) {
+      toast({
+        title: "Share failed",
+        description: "There was an error sharing to Facebook",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLinkedInShare = async () => {
+    try {
+      const shareUrl = encodeURIComponent(imageUrl);
+      const shareTitle = encodeURIComponent('Check out my post');
+      const shareDescription = encodeURIComponent(brandedCaption);
+      
+      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}&title=${shareTitle}&summary=${shareDescription}`;
+      
+      const width = 550;
+      const height = 400;
+      const left = (window.screen.width / 2) - (width / 2);
+      const top = (window.screen.height / 2) - (height / 2);
+      
+      window.open(
+        linkedInUrl,
+        'Share on LinkedIn',
+        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
+      );
+
+      toast({
+        title: "Share initiated",
+        description: "LinkedIn sharing window opened",
+      });
+    } catch (error) {
+      toast({
+        title: "Share failed",
+        description: "Failed to share to LinkedIn",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTwitterShare = () => {
+    try {
+      const twitterUrl = new URL('https://twitter.com/intent/tweet');
+      const params = new URLSearchParams({
+        text: brandedCaption,
+        url: imageUrl,
+        via: 'EngagePerfect'
+      });
+      window.open(`${twitterUrl}?${params}`, '_blank');
+      
+      toast({
+        title: "Share initiated",
+        description: "Twitter sharing window opened",
+      });
+    } catch (error) {
+      toast({
+        title: "Share failed",
+        description: "Failed to share to Twitter",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = async (targetPlatform: Platform) => {
     try {
       switch (targetPlatform) {
         case 'LinkedIn':
-          shareToLinkedIn(window.location.href, brandedCaption);
+          handleLinkedInShare();
           break;
         case 'Facebook':
           handleFacebookShare();
           break;
         case 'Twitter':
-          const twitterUrl = new URL('https://twitter.com/intent/tweet');
-          const twitterParams = new URLSearchParams({
-            text: brandedCaption,
-            url: window.location.href,
-            via: 'EngagePerfect'
-          });
-          window.open(`${twitterUrl}?${twitterParams}`, '_blank');
+          handleTwitterShare();
           break;
         default:
+          // Native share for other platforms
           const response = await fetch(imageUrl);
           const blob = await response.blob();
           const file = new File([blob], 'share-image.jpg', { 
@@ -92,7 +158,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
             await navigator.share({
               title: 'Share your post',
               text: brandedCaption,
-              url: window.location.href,
+              url: imageUrl,
               files: [file]
             });
             toast({
@@ -100,7 +166,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
               description: `Your post has been shared to ${targetPlatform}`,
             });
           } else {
-            const shareUrl = `https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(brandedCaption)}`;
+            const shareUrl = `https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(imageUrl)}&text=${encodeURIComponent(brandedCaption)}`;
             window.open(shareUrl, '_blank');
           }
       }
