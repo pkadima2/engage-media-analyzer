@@ -3,6 +3,7 @@ import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2
 import { Platform } from '../PostWizard';
 import { SocialButton } from './SocialButton';
 import { downloadPost, copyToClipboard, shareToLinkedIn } from '@/utils/shareUtils';
+import { toast } from '@/hooks/use-toast';
 
 interface ShareOptionsProps {
   imageUrl: string;
