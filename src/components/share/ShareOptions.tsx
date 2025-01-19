@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react';
-import { Link2, Share2, Twitter, Music2, Instagram } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from '@/hooks/use-toast';
+import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
-import { LinkedInShare } from './LinkedInShare';
-import { FacebookShare } from './FacebookShare';
-import { DownloadButton } from './DownloadButton';
+import html2canvas from 'html2canvas';
 
 interface ShareOptionsProps {
   imageUrl: string;
@@ -34,26 +32,101 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
     };
   }, []);
 
-  const handleShare = async (targetPlatform: Platform) => {
+  const handleLinkedInShare = () => {
     try {
-      const shareData = {
-        title: 'Check out my post',
-        text: brandedCaption,
-        url: imageUrl,
-      };
+      // LinkedIn sharing URL
+      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent('Check out my post')}&summary=${encodeURIComponent(brandedCaption)}`;
+      
+      // Open popup window
+      const width = 550;
+      const height = 400;
+      const left = (window.screen.width / 2) - (width / 2);
+      const top = (window.screen.height / 2) - (height / 2);
+      
+      const popup = window.open(
+        linkedInUrl,
+        'Share on LinkedIn',
+        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
+      );
 
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
+      if (popup) {
+        popup.focus();
         toast({
-          title: "Shared successfully",
-          description: `Your post has been shared to ${targetPlatform}`,
+          title: "Share initiated",
+          description: "LinkedIn sharing window opened",
         });
       } else {
-        const shareUrl = targetPlatform === 'Twitter' 
-          ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(brandedCaption)}&url=${encodeURIComponent(imageUrl)}`
-          : `https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(imageUrl)}&text=${encodeURIComponent(brandedCaption)}`;
-        
-        window.open(shareUrl, '_blank');
+        throw new Error('Popup blocked');
+      }
+    } catch (error) {
+      console.error('LinkedIn share error:', error);
+      toast({
+        title: "Share failed",
+        description: "Failed to open LinkedIn sharing window. Please check your popup blocker settings.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFacebookShare = () => {
+    if (!window.FB) {
+      toast({
+        title: "Share failed",
+        description: "Please try again in a moment",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    window.FB.ui({
+      method: 'share',
+      href: imageUrl,
+      quote: brandedCaption,
+    }, function(response) {
+      if (response && !response.error_message) {
+        toast({
+          title: "Shared successfully",
+          description: "Your post has been shared to Facebook",
+        });
+      } else {
+        toast({
+          title: "Share failed",
+          description: "There was an error sharing to Facebook",
+          variant: "destructive",
+        });
+      }
+    });
+  };
+
+  const handleShare = async (targetPlatform: Platform) => {
+    try {
+      switch (targetPlatform) {
+        case 'LinkedIn':
+          handleLinkedInShare();
+          break;
+        case 'Facebook':
+          handleFacebookShare();
+          break;
+        default:
+          const shareData = {
+            title: 'Share your post',
+            text: brandedCaption,
+            url: imageUrl,
+          };
+
+          if (navigator.share && navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            toast({
+              title: "Shared successfully",
+              description: `Your post has been shared to ${targetPlatform}`,
+            });
+          } else {
+            const shareUrl = targetPlatform === 'Twitter' 
+              ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(brandedCaption)}&url=${encodeURIComponent(imageUrl)}`
+              : `https://${targetPlatform.toLowerCase()}.com/share?url=${encodeURIComponent(imageUrl)}&text=${encodeURIComponent(brandedCaption)}`;
+            
+            window.open(shareUrl, '_blank');
+          }
       }
     } catch (error) {
       console.error('Share error:', error);
@@ -81,22 +154,64 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
     }
   };
 
+  const handleDownload = async () => {
+    try {
+      const previewCard = document.querySelector('.preview-card') as HTMLElement;
+      if (!previewCard) {
+        throw new Error('Preview card not found');
+      }
+
+      const canvas = await html2canvas(previewCard, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: 'white',
+      });
+
+      const blob = await new Promise<Blob>((resolve) => 
+        canvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
+      );
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'engageperfect-post.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download complete",
+        description: "Your post has been downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download the post",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getPlatformIcon = (p: Platform) => {
     switch (p) {
       case 'Instagram':
-        return <Instagram className="h-4 w-4" />;
+        return <Instagram />;
       case 'Twitter':
-        return <Twitter className="h-4 w-4" />;
-      case 'Facebook':
-        return <FacebookShare imageUrl={imageUrl} caption={brandedCaption} />;
+        return <Twitter />;
       case 'LinkedIn':
-        return <LinkedInShare imageUrl={imageUrl} caption={brandedCaption} />;
+        return <Linkedin />;
+      case 'Facebook':
+        return <Facebook />;
       case 'TikTok':
-        return <Music2 className="h-4 w-4" />;
+        return <Music2 />;
       default:
-        return <Share2 className="h-4 w-4" />;
+        return <Share2 />;
     }
   };
+
+  const platforms: Platform[] = ['Instagram', 'Twitter', 'LinkedIn', 'Facebook', 'TikTok'];
 
   return (
     <div className="space-y-4">
@@ -111,15 +226,38 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       </Button>
 
       <div className="grid grid-cols-2 gap-2">
+        {platforms
+          .filter(p => p !== platform)
+          .map(p => (
+            <Button
+              key={p}
+              variant="outline"
+              onClick={() => handleShare(p)}
+              className="flex items-center gap-2"
+            >
+              {getPlatformIcon(p)}
+              {p}
+            </Button>
+          ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
         <Button
           variant="secondary"
           onClick={handleCopyLink}
           className="flex items-center gap-2"
         >
-          <Link2 className="h-4 w-4" />
+          <Link2 />
           Copy Link
         </Button>
-        <DownloadButton caption={brandedCaption} />
+        <Button
+          variant="secondary"
+          onClick={handleDownload}
+          className="flex items-center gap-2"
+        >
+          <Download />
+          Download
+        </Button>
       </div>
     </div>
   );
