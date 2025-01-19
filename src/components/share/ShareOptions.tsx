@@ -16,7 +16,6 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
 
   useEffect(() => {
-    // Load Facebook SDK
     const loadFacebookSDK = () => {
       const script = document.createElement('script');
       script.src = 'https://connect.facebook.net/en_US/sdk.js';
@@ -86,17 +85,8 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       
       const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}&title=${shareTitle}&summary=${shareDescription}`;
       
-      const width = 550;
-      const height = 400;
-      const left = (window.screen.width / 2) - (width / 2);
-      const top = (window.screen.height / 2) - (height / 2);
+      window.open(linkedInUrl, '_blank');
       
-      window.open(
-        linkedInUrl,
-        'Share on LinkedIn',
-        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-      );
-
       toast({
         title: "Share initiated",
         description: "LinkedIn sharing window opened",
@@ -216,10 +206,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
         <SocialButton
           icon={Download}
           platform="Download"
-          onClick={() => {
-            const previewCard = document.querySelector('.preview-card') as HTMLElement;
-            downloadPost(previewCard);
-          }}
+          onClick={() => downloadPost(document.querySelector('.preview-card'))}
           variant="secondary"
         />
       </div>
