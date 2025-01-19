@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
-import { Button } from '../ui/button';
-import { toast } from '@/hooks/use-toast';
 import { Instagram, Twitter, Linkedin, Facebook, Music2, Share2, Download, Link2 } from 'lucide-react';
 import { Platform } from '../PostWizard';
-import html2canvas from 'html2canvas';
+import { SocialButton } from './SocialButton';
+import { downloadPost, copyToClipboard, shareToLinkedIn } from '@/utils/shareUtils';
 
 interface ShareOptionsProps {
   imageUrl: string;
@@ -12,8 +11,8 @@ interface ShareOptionsProps {
 }
 
 export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
-  const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
   const FB_APP_ID = '1602291440389010';
+  const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -31,47 +30,6 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       });
     };
   }, []);
-
-  const handleLinkedInShare = () => {
-    try {
-      const linkedInUrl = new URL('https://www.linkedin.com/sharing/share-offsite/');
-      const params = new URLSearchParams({
-        url: window.location.href,
-        title: 'Check out my post',
-        summary: brandedCaption,
-        source: 'EngagePerfect'
-      });
-      linkedInUrl.search = params.toString();
-      
-      const width = 550;
-      const height = 400;
-      const left = (window.screen.width / 2) - (width / 2);
-      const top = (window.screen.height / 2) - (height / 2);
-      
-      const popup = window.open(
-        linkedInUrl.toString(),
-        'Share on LinkedIn',
-        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-      );
-
-      if (popup) {
-        popup.focus();
-        toast({
-          title: "Share initiated",
-          description: "LinkedIn sharing window opened",
-        });
-      } else {
-        throw new Error('Popup blocked');
-      }
-    } catch (error) {
-      console.error('LinkedIn share error:', error);
-      toast({
-        title: "Share failed",
-        description: "Failed to open LinkedIn sharing window. Please check your popup blocker settings.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleFacebookShare = () => {
     if (!window.FB) {
@@ -107,7 +65,7 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
     try {
       switch (targetPlatform) {
         case 'LinkedIn':
-          handleLinkedInShare();
+          shareToLinkedIn(window.location.href, brandedCaption);
           break;
         case 'Facebook':
           handleFacebookShare();
@@ -129,15 +87,13 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
             lastModified: Date.now()
           });
           
-          const shareData = {
-            title: 'Share your post',
-            text: brandedCaption,
-            url: window.location.href,
-            files: [file]
-          };
-
-          if (navigator.share && navigator.canShare(shareData)) {
-            await navigator.share(shareData);
+          if (navigator.share && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'Share your post',
+              text: brandedCaption,
+              url: window.location.href,
+              files: [file]
+            });
             toast({
               title: "Shared successfully",
               description: `Your post has been shared to ${targetPlatform}`,
@@ -157,127 +113,66 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
     }
   };
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(`${imageUrl}\n\n${brandedCaption}`);
-      toast({
-        title: "Link copied",
-        description: "The link has been copied to your clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Failed to copy link to clipboard",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDownload = async () => {
-    try {
-      const previewCard = document.querySelector('.preview-card') as HTMLElement;
-      if (!previewCard) {
-        throw new Error('Preview card not found');
-      }
-
-      const canvas = await html2canvas(previewCard, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: 'white',
-      });
-
-      const blob = await new Promise<Blob>((resolve) => 
-        canvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
-      );
-      
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'engageperfect-post.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Download complete",
-        description: "Your post has been downloaded successfully",
-      });
-    } catch (error) {
-      console.error('Download error:', error);
-      toast({
-        title: "Download failed",
-        description: "Failed to download the post",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getPlatformIcon = (p: Platform) => {
-    switch (p) {
-      case 'Instagram':
-        return <Instagram />;
-      case 'Twitter':
-        return <Twitter />;
-      case 'LinkedIn':
-        return <Linkedin />;
-      case 'Facebook':
-        return <Facebook />;
-      case 'TikTok':
-        return <Music2 />;
-      default:
-        return <Share2 />;
-    }
-  };
-
   const platforms: Platform[] = ['Instagram', 'Twitter', 'LinkedIn', 'Facebook', 'TikTok'];
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold mb-4">Share Your Post</h3>
       
-      <Button 
-        className="w-full"
+      <SocialButton
+        icon={getPlatformIcon(platform)}
+        platform={`Share to ${platform}`}
         onClick={() => handleShare(platform)}
-      >
-        {getPlatformIcon(platform)}
-        Share to {platform}
-      </Button>
+      />
 
       <div className="grid grid-cols-2 gap-2">
         {platforms
           .filter(p => p !== platform)
           .map(p => (
-            <Button
+            <SocialButton
               key={p}
-              variant="outline"
+              icon={getPlatformIcon(p)}
+              platform={p}
               onClick={() => handleShare(p)}
-              className="flex items-center gap-2"
-            >
-              {getPlatformIcon(p)}
-              {p}
-            </Button>
+              variant="outline"
+            />
           ))}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Button
+        <SocialButton
+          icon={Link2}
+          platform="Copy Link"
+          onClick={() => copyToClipboard(imageUrl, brandedCaption)}
           variant="secondary"
-          onClick={handleCopyLink}
-          className="flex items-center gap-2"
-        >
-          <Link2 />
-          Copy Link
-        </Button>
-        <Button
+        />
+        <SocialButton
+          icon={Download}
+          platform="Download"
+          onClick={() => {
+            const previewCard = document.querySelector('.preview-card') as HTMLElement;
+            downloadPost(previewCard);
+          }}
           variant="secondary"
-          onClick={handleDownload}
-          className="flex items-center gap-2"
-        >
-          <Download />
-          Download
-        </Button>
+        />
       </div>
     </div>
   );
+};
+
+const getPlatformIcon = (p: Platform) => {
+  switch (p) {
+    case 'Instagram':
+      return Instagram;
+    case 'Twitter':
+      return Twitter;
+    case 'LinkedIn':
+      return Linkedin;
+    case 'Facebook':
+      return Facebook;
+    case 'TikTok':
+      return Music2;
+    default:
+      return Share2;
+  }
 };
