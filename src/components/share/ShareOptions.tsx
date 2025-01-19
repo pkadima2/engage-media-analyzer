@@ -33,23 +33,39 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
   }, []);
 
   const handleLinkedInShare = () => {
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(imageUrl)}&summary=${encodeURIComponent(brandedCaption)}`;
-    
-    const width = 550;
-    const height = 400;
-    const left = (window.screen.width / 2) - (width / 2);
-    const top = (window.screen.height / 2) - (height / 2);
-    
-    window.open(
-      linkedInUrl,
-      'Share on LinkedIn',
-      `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
-    );
+    try {
+      // LinkedIn sharing URL
+      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent('Check out my post')}&summary=${encodeURIComponent(brandedCaption)}`;
+      
+      // Open popup window
+      const width = 550;
+      const height = 400;
+      const left = (window.screen.width / 2) - (width / 2);
+      const top = (window.screen.height / 2) - (height / 2);
+      
+      const popup = window.open(
+        linkedInUrl,
+        'Share on LinkedIn',
+        `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=yes, resizable=no, copyhistory=no, width=${width}, height=${height}, top=${top}, left=${left}`
+      );
 
-    toast({
-      title: "Share initiated",
-      description: "LinkedIn sharing window opened",
-    });
+      if (popup) {
+        popup.focus();
+        toast({
+          title: "Share initiated",
+          description: "LinkedIn sharing window opened",
+        });
+      } else {
+        throw new Error('Popup blocked');
+      }
+    } catch (error) {
+      console.error('LinkedIn share error:', error);
+      toast({
+        title: "Share failed",
+        description: "Failed to open LinkedIn sharing window. Please check your popup blocker settings.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFacebookShare = () => {
