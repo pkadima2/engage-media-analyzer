@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PostWizard } from '@/components/PostWizard';
+import { Helmet } from 'react-helmet';
 
 const Index = () => {
   const handleSignOut = async () => {
@@ -26,6 +27,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <meta property="og:title" content="EngagePerfect Post" />
+        <meta property="og:description" content="Check out my post created with EngagePerfect" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@EngagePerfect" />
+      </Helmet>
+
       <header className="border-b">
         <div className="container max-w-4xl py-4 flex justify-between items-center">
           <img src="/lovable-uploads/416dbec0-a453-405d-9d5d-b4f9a4c84bbf.png" alt="EngagePerfect" className="h-8" />
