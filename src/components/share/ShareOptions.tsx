@@ -89,7 +89,6 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
       method: 'share',
       href: window.location.href,
       quote: brandedCaption,
-      picture: imageUrl,
       caption: 'Check out my post on EngagePerfect',
     }, function(response) {
       if (response && !response.error_message) {
@@ -126,11 +125,16 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
           window.open(`${twitterUrl}?${twitterParams}`, '_blank');
           break;
         default:
+          // Convert Blob to File for Web Share API
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const file = new File([blob], 'share-image.jpg', { type: blob.type });
+          
           const shareData = {
             title: 'Share your post',
             text: brandedCaption,
             url: window.location.href,
-            files: [await (await fetch(imageUrl)).blob()]
+            files: [file]
           };
 
           if (navigator.share && navigator.canShare(shareData)) {
