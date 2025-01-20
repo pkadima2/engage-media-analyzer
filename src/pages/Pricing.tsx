@@ -64,11 +64,11 @@ export default function Pricing() {
             "5 free requests during trial",
             "75 requests/month or 900/year",
             "Single platform support",
-            "Post ideas and captions",
+            "Post ideas and captions (Image only support)",
             "Basic analytics"
           ]}
           savings={isYearly ? "Save €59.99/year (~50%)" : undefined}
-          buttonText="Choose Lite"
+          buttonText={isYearly ? "Start Free Trial" : "Choose Lite"}
           note="Start your 5-day trial with 5 free requests. Cancel anytime during the trial to avoid charges."
           onSelect={() => handlePlanSelect("lite")}
         />
@@ -80,6 +80,8 @@ export default function Pricing() {
           features={[
             "250 requests/month or 3000/year",
             "Multi-platform support",
+            "Advanced Post ideas and captions",
+            "Multi media support (Image/video)",
             "Priority support",
             "Advanced analytics",
             "Custom templates"
