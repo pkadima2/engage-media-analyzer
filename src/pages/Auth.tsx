@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock, Eye, EyeOff, User, Star } from "lucide-react";
-import { AuthError } from "@supabase/supabase-js";
+import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -88,11 +87,30 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container flex h-16 items-center">
+      <div className="w-full border-b">
+        <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Star className="h-6 w-6 text-[#4461F2]" />
-            <span className="font-bold text-xl">EngagePerfect</span>
+            <div className="text-[#4461F2]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.0008 3L14.4608 8.34111L20.4848 9.16142L16.2428 13.3169L17.2208 19.3186L12.0008 16.5L6.78084 19.3186L7.75884 13.3169L3.51684 9.16142L9.54084 8.34111L12.0008 3Z" fill="currentColor"/>
+              </svg>
+            </div>
+            <span className="font-semibold text-xl">EngagePerfect</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              className="text-muted-foreground"
+              onClick={() => setIsSignUp(false)}
+            >
+              Login
+            </Button>
+            <Button 
+              className="bg-[#4461F2] hover:bg-[#4461F2]/90"
+              onClick={() => setIsSignUp(true)}
+            >
+              Sign Up
+            </Button>
           </div>
         </div>
       </div>
@@ -108,7 +126,7 @@ const Auth = () => {
             {isSignUp ? "Create account" : "Welcome back"}
           </h1>
           <p className="text-center text-muted-foreground mb-8">
-            {isSignUp ? "" : "Sign in to your account"}
+            {isSignUp ? "Sign up for your account" : "Sign in to your account"}
           </p>
 
           {errorMessage && (
