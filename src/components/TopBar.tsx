@@ -67,13 +67,13 @@ const TopBar = () => {
             </SheetContent>
           </Sheet>
 
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="text-[#4461F2]">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.0008 3L14.4608 8.34111L20.4848 9.16142L16.2428 13.3169L17.2208 19.3186L12.0008 16.5L6.78084 19.3186L7.75884 13.3169L3.51684 9.16142L9.54084 8.34111L12.0008 3Z" fill="currentColor"/>
-              </svg>
-            </div>
-            <span className="font-semibold text-xl">EngagePerfect</span>
+          <Link to="/" className="flex items-center space-x-3">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.3333 4L20.4267 10.4548L27.3133 11.4151L22.3233 16.3096L23.52 23.1581L17.3333 19.9333L11.1467 23.1581L12.3433 16.3096L7.35333 11.4151L14.24 10.4548L17.3333 4Z" fill="#4461F2"/>
+              <path d="M8 4L9.55467 7.17037L13 7.64706L10.5 10.0797L11.1093 13.5096L8 11.8889L4.89067 13.5096L5.5 10.0797L3 7.64706L6.44533 7.17037L8 4Z" fill="#4461F2"/>
+              <path d="M24 20L25.5547 23.1704L29 23.6471L26.5 26.0797L27.1093 29.5096L24 27.8889L20.8907 29.5096L21.5 26.0797L19 23.6471L22.4453 23.1704L24 20Z" fill="#4461F2"/>
+            </svg>
+            <span className="font-semibold text-xl">EngagePerfect AI</span>
           </Link>
         </div>
 
