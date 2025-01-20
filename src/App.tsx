@@ -2,15 +2,21 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Index from "./pages/Index"
 import Auth from "./pages/Auth"
 import Pricing from "./pages/Pricing"
+import Navbar from "./components/Navbar"
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/pricing" element={<Pricing />} />
-      </Routes>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 pt-16">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
   )
 }
