@@ -1,10 +1,8 @@
 import React from 'react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
 import { Card } from './ui/card';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Label } from './ui/label';
+import { RadioGroup } from './ui/radio-group';
 import { Skeleton } from './ui/skeleton';
+import { CaptionOption } from './caption/CaptionOption';
 
 interface CaptionEditorProps {
   captions: string[];
@@ -21,22 +19,6 @@ export const CaptionEditor = ({
   selectedCaption,
   isLoading
 }: CaptionEditorProps) => {
-  const formatCaption = (caption: string) => {
-    // Extract title between ** ** if present
-    const titleMatch = caption.match(/\*\*(.*?)\*\*/);
-    if (titleMatch) {
-      const title = titleMatch[1];
-      const rest = caption.replace(/\*\*.*?\*\*/, '').trim();
-      return (
-        <>
-          <p className="font-bold text-base mb-2">{`**${title}**`}</p>
-          <p>{rest}</p>
-        </>
-      );
-    }
-    return caption;
-  };
-
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -68,23 +50,12 @@ export const CaptionEditor = ({
         className="space-y-4"
       >
         {captions.map((caption, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex items-start space-x-2">
-              <RadioGroupItem value={caption} id={`caption-${index}`} />
-              <Label htmlFor={`caption-${index}`} className="font-medium">
-                Option {index + 1}
-              </Label>
-            </div>
-            <Textarea
-              value={caption}
-              onChange={(e) => onEdit(index, e.target.value)}
-              className="min-h-[100px] w-full"
-              placeholder="Edit this caption..."
-            />
-            <div className="mt-2 text-sm text-foreground">
-              {formatCaption(caption)}
-            </div>
-          </div>
+          <CaptionOption
+            key={index}
+            index={index}
+            caption={caption}
+            onEdit={(newCaption) => onEdit(index, newCaption)}
+          />
         ))}
       </RadioGroup>
     </Card>

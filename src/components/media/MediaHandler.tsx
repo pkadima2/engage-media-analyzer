@@ -11,6 +11,11 @@ interface MediaHandlerProps {
 }
 
 export const MediaHandler = ({ src, caption, fileType, overlayEnabled }: MediaHandlerProps) => {
+  const formatCaption = (caption: string) => {
+    if (!caption) return '';
+    return caption.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+  };
+
   const isVideo = fileType?.startsWith('video/');
 
   if (!src) {
@@ -29,7 +34,7 @@ export const MediaHandler = ({ src, caption, fileType, overlayEnabled }: MediaHa
         <VideoPreview src={src} />
         {overlayEnabled && caption && (
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-black/50">
-            <p className="text-white text-center">{caption}</p>
+            <p className="text-white text-center">{formatCaption(caption)}</p>
           </div>
         )}
       </div>
@@ -37,7 +42,7 @@ export const MediaHandler = ({ src, caption, fileType, overlayEnabled }: MediaHa
   }
 
   return overlayEnabled ? (
-    <CaptionOverlay imageUrl={src} caption={caption || ''} />
+    <CaptionOverlay imageUrl={src} caption={formatCaption(caption || '')} />
   ) : (
     <img 
       src={src} 
