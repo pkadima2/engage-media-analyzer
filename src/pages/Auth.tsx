@@ -86,36 +86,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="w-full border-b">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="text-[#4461F2]">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.0008 3L14.4608 8.34111L20.4848 9.16142L16.2428 13.3169L17.2208 19.3186L12.0008 16.5L6.78084 19.3186L7.75884 13.3169L3.51684 9.16142L9.54084 8.34111L12.0008 3Z" fill="currentColor"/>
-              </svg>
-            </div>
-            <span className="font-semibold text-xl">EngagePerfect</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              className="text-muted-foreground"
-              onClick={() => setIsSignUp(false)}
-            >
-              Login
-            </Button>
-            <Button 
-              className="bg-[#4461F2] hover:bg-[#4461F2]/90"
-              onClick={() => setIsSignUp(true)}
-            >
-              Sign Up
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Auth Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-[20px] shadow-xl p-8 animate-fade-up">
           <div className="flex justify-center mb-6">
