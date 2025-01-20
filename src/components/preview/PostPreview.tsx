@@ -3,20 +3,24 @@ import { Card } from '../ui/card';
 import { CaptionPreview } from './CaptionPreview';
 import { ShareOptions } from '../share/ShareOptions';
 import { Platform } from '../PostWizard';
+import { VideoPreview } from './VideoPreview';
 
 interface PostPreviewProps {
   imageUrl: string;
   caption: string;
   overlayEnabled: boolean;
   platform?: Platform;
+  fileType?: string;
 }
 
-export const PostPreview = ({ imageUrl, caption, overlayEnabled, platform }: PostPreviewProps) => {
+export const PostPreview = ({ imageUrl, caption, overlayEnabled, platform, fileType }: PostPreviewProps) => {
+  const isVideo = fileType?.startsWith('video/');
+
   if (!imageUrl) {
     return (
       <Card className="p-6">
         <p className="text-center text-muted-foreground">
-          Upload an image to see the preview
+          Upload media to see the preview
         </p>
       </Card>
     );
@@ -42,7 +46,9 @@ export const PostPreview = ({ imageUrl, caption, overlayEnabled, platform }: Pos
       <Card className="p-6 preview-card">
         <h3 className="text-lg font-semibold mb-4">Preview</h3>
         <div className="space-y-4">
-          {overlayEnabled ? (
+          {isVideo ? (
+            <VideoPreview src={imageUrl} />
+          ) : overlayEnabled ? (
             <CaptionPreview imageUrl={imageUrl} caption={caption} />
           ) : (
             <>
@@ -67,6 +73,7 @@ export const PostPreview = ({ imageUrl, caption, overlayEnabled, platform }: Pos
             imageUrl={imageUrl}
             caption={caption}
             platform={platform}
+            fileType={fileType}
           />
         </Card>
       )}

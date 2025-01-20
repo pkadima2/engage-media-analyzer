@@ -38,6 +38,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [postId, setPostId] = useState<string | null>(null);
   const imageRef = React.useRef<HTMLImageElement>(null);
+  const [fileType, setFileType] = useState<string>('');
 
   // Caption generation state
   const [captions, setCaptions] = useState<string[]>([]);
@@ -113,6 +114,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
     const file = acceptedFiles[0];
     if (file) {
       setFile(file);
+      setFileType(file.type);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -262,8 +264,10 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
                   onClear={() => {
                     setPreview('');
                     setFile(null);
+                    setFileType('');
                   }}
                   imageRef={imageRef}
+                  fileType={fileType}
                 />
                 {isUploading && (
                   <UploadProgress progress={uploadProgress} isUploading={isUploading} />
@@ -421,6 +425,7 @@ export const PostWizard = ({ onComplete }: PostWizardProps) => {
           caption={selectedCaption || ''}
           overlayEnabled={overlayEnabled}
           platform={platform}
+          fileType={fileType}
         />
       </div>
     </div>

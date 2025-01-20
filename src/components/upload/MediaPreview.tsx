@@ -3,6 +3,7 @@ import ReactCrop, { type Crop } from 'react-image-crop';
 import { Button } from '@/components/ui/button';
 import { X, RotateCw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { VideoPreview } from '../preview/VideoPreview';
 
 interface MediaPreviewProps {
   preview: string;
@@ -12,6 +13,7 @@ interface MediaPreviewProps {
   onRotate: () => void;
   onClear: () => void;
   imageRef: React.RefObject<HTMLImageElement>;
+  fileType?: string;
 }
 
 export const MediaPreview = ({
@@ -21,8 +23,11 @@ export const MediaPreview = ({
   rotation,
   onRotate,
   onClear,
-  imageRef
+  imageRef,
+  fileType
 }: MediaPreviewProps) => {
+  const isVideo = fileType?.startsWith('video/');
+
   return (
     <Card className="p-6 space-y-6">
       <div className="relative">
@@ -35,27 +40,33 @@ export const MediaPreview = ({
           <X className="w-4 h-4" />
         </Button>
         
-        <ReactCrop
-          crop={crop}
-          onChange={onCropChange}
-          className="max-h-[60vh] overflow-hidden rounded-lg"
-        >
-          <img
-            ref={imageRef}
-            src={preview}
-            alt="Preview"
-            style={{ transform: `rotate(${rotation}deg)` }}
-            className="max-w-full h-auto"
-          />
-        </ReactCrop>
+        {isVideo ? (
+          <VideoPreview src={preview} />
+        ) : (
+          <ReactCrop
+            crop={crop}
+            onChange={onCropChange}
+            className="max-h-[60vh] overflow-hidden rounded-lg"
+          >
+            <img
+              ref={imageRef}
+              src={preview}
+              alt="Preview"
+              style={{ transform: `rotate(${rotation}deg)` }}
+              className="max-w-full h-auto"
+            />
+          </ReactCrop>
+        )}
       </div>
 
-      <div className="flex justify-center gap-4">
-        <Button variant="outline" onClick={onRotate}>
-          <RotateCw className="w-4 h-4 mr-2" />
-          Rotate
-        </Button>
-      </div>
+      {!isVideo && (
+        <div className="flex justify-center gap-4">
+          <Button variant="outline" onClick={onRotate}>
+            <RotateCw className="w-4 h-4 mr-2" />
+            Rotate
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };

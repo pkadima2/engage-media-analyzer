@@ -9,9 +9,11 @@ interface ShareOptionsProps {
   imageUrl: string;
   caption: string;
   platform: Platform;
+  fileType?: string;
 }
 
-export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps) => {
+export const ShareOptions = ({ imageUrl, caption, platform, fileType }: ShareOptionsProps) => {
+  const isVideo = fileType?.startsWith('video/');
   const brandedCaption = `${caption}\n\nCreated with @EngagePerfect ✨`;
   const FB_APP_ID = '1602291440389010';
 
@@ -175,29 +177,39 @@ export const ShareOptions = ({ imageUrl, caption, platform }: ShareOptionsProps)
 
   const handleDownload = async () => {
     try {
-      const previewCard = document.querySelector('.preview-card') as HTMLElement;
-      if (!previewCard) {
-        throw new Error('Preview card not found');
+      if (isVideo) {
+        // For videos, create a direct download link
+        const a = document.createElement('a');
+        a.href = imageUrl;
+        a.download = 'engageperfect-video.mp4';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        const previewCard = document.querySelector('.preview-card') as HTMLElement;
+        if (!previewCard) {
+          throw new Error('Preview card not found');
+        }
+
+        const canvas = await html2canvas(previewCard, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: 'white',
+        });
+
+        const blob = await new Promise<Blob>((resolve) => 
+          canvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
+        );
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'engageperfect-post.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
-
-      const canvas = await html2canvas(previewCard, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: 'white',
-      });
-
-      const blob = await new Promise<Blob>((resolve) => 
-        canvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
-      );
-      
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'engageperfect-post.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
       
       toast({
         title: "Download complete",
