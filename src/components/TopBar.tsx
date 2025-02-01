@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "./ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -29,6 +29,20 @@ import { supabase } from "@/integrations/supabase/client"
 const TopBar = () => {
   const [session, setSession] = useState<any>(null)
   const navigate = useNavigate()
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -36,21 +50,20 @@ const TopBar = () => {
   }
 
   return (
-    <header className="fixed top-0 w-full border-b bg-background z-50">
+    <nav className="fixed top-0 w-full bg-white z-50 border-b">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-6">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
+                <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
               <SheetHeader>
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col space-y-4 mt-4">
+              <div className="flex flex-col gap-4 mt-4">
                 <Link to="/" className="text-sm font-medium">
                   Home
                 </Link>
@@ -63,7 +76,7 @@ const TopBar = () => {
                 <Link to="/blog" className="text-sm font-medium">
                   Blog
                 </Link>
-              </nav>
+              </div>
             </SheetContent>
           </Sheet>
 
@@ -77,7 +90,7 @@ const TopBar = () => {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-6">
+        <div className="hidden md:flex items-center space-x-6">
           <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
             Home
           </Link>
@@ -90,7 +103,7 @@ const TopBar = () => {
           <Link to="/blog" className="text-sm font-medium transition-colors hover:text-primary">
             Blog
           </Link>
-        </nav>
+        </div>
 
         <div className="flex items-center space-x-4">
           {session ? (
@@ -137,17 +150,17 @@ const TopBar = () => {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="outline" asChild>
                 <Link to="/auth">Login</Link>
               </Button>
-              <Button className="bg-[#4461F2] hover:bg-[#4461F2]/90" asChild>
+              <Button asChild>
                 <Link to="/auth">Sign up</Link>
               </Button>
             </>
           )}
         </div>
       </div>
-    </header>
+    </nav>
   )
 }
 
